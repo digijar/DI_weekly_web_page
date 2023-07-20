@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel File Upload to BigQuery</title>
+    <style>
+        /* Add some basic styles for the table */
+        table.preview-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table.preview-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        table.preview-table tr.alternate-row {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Excel File Upload to BigQuery</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" accept=".xls, .xlsx" multiple>
+        <label for="tableIdInput">Table ID:</label>
+        <input type="text" id="tableIdInput" name="tableId" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="previewArea">
+        <!-- The content of the selected Excel file will be displayed here -->
+    </div>
+
+    <!-- Add any JavaScript links or scripts here -->
+    <!-- Add the SheetJS library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
