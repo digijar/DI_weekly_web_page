@@ -48,6 +48,10 @@ def upload():
         return 'File(s) uploaded successfully!'
     except Exception as e:
         return f'Error uploading file: {str(e)}', 500
+    
+@app.route('/model_testing')
+def model_testing():
+    return render_template('model_testing.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
