@@ -6,7 +6,7 @@ from google.cloud import bigquery
 
 # Replace 'your-project-id' with your actual Google Cloud Project ID
 from dotenv import load_dotenv
-load_dotenv('spotify_api_keys.env')
+load_dotenv('gcloud.env')
 PROJECT_ID = os.getenv('PROJECT_ID')
 DATASET_ID = os.getenv('DATASET_ID')
 
@@ -27,18 +27,21 @@ def upload():
         if len(files) == 0:
             return 'No file selected', 400
 
-        table_id = request.form.get('tableId')  # Get the user-inputted table ID
+        table_id = request.form.get('tableIdInput')  # Get the user-inputted table ID
 
         if not table_id:
             return 'Table ID is required', 400
 
         # Iterate through uploaded files and read data using pandas
         for file in files:
-            df = pd.read_excel(file)
+
+            # Convert the file to a binary file
+
+            df = pd.read_excel(file, header=1)
 
             # Upload the data to BigQuery
-            client = bigquery.Client(project=PROJECT_ID)
-            dataset_id = DATASET_ID 
+            client = bigquery.Client(project="testing-bigquery-vertexai")
+            dataset_id = "web_UI"
             table_ref = client.dataset(dataset_id).table(table_id)
             job_config = bigquery.LoadJobConfig()
             job_config.autodetect = True

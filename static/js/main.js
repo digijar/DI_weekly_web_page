@@ -148,6 +148,10 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('file', file);
         }
 
+        // Add the value of the tableIdInput to the formData
+        const tableIdInput = document.getElementById('tableIdInput').value;
+        formData.append('tableIdInput', tableIdInput);
+
         // Use fetch to send the form data to the server for processing
         fetch('/upload', {
             method: 'POST',
