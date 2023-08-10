@@ -3,6 +3,7 @@ import os
 # Importing necessary libraries for handling Excel and BigQuery
 import pandas as pd
 from google.cloud import bigquery
+from flask_cors import CORS
 
 # Replace 'your-project-id' with your actual Google Cloud Project ID
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ DATASET_ID = os.getenv('DATASET_ID')
 
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def index():

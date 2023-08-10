@@ -23,6 +23,9 @@
             background-color: #f2f2f2;
         }
     </style>
+
+    <!-- jQuery cdn -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -56,10 +59,16 @@
                     <label for="opportunityIdInput">Opportunity ID:</label>
                     <input type="text" id="opportunityIdInput" name="opportunityId" required>
                 </th>
+                    
                 <th class="col-md-3">
-                    <button type="button" class="btn btn-primary">Check BigQuery</button>
+                    <button type="button" class="btn btn-primary" onclick="return_opportunity()">Check BigQuery</button>
                 </th>
                 <th class="col-md-3"></th>
+            </tr>
+
+            <tr>
+                <th class="col-md-3"><p id="opportunityId_output"> </p></th>
+                
             </tr>
 
             <tr>
@@ -70,7 +79,7 @@
                     <textarea rows="5" cols="60" id="classificationOutput" name="classificationOutput" placeholder="Output will be displayed here"></textarea>
                 </th>
                 <th class="col-md-4">
-                    <button type="button" class="btn btn-primary">Run Model</button>
+                    <button type="button" class="btn btn-primary" onclick="get_classification_result()">Run Model</button>
                 </th>
                 <th class="col-md-2"></th>
             </tr>
@@ -83,7 +92,7 @@
                     <textarea rows="5" cols="60" id="summarizationOutput" name="summarizationOutput" placeholder="Output will be displayed here"></textarea>
                 </th>
                 <th class="col-md-4">
-                    <button type="button" class="btn btn-primary">Run Model</button>
+                    <button type="button" class="btn btn-primary" onclick="get_summarization_result()">Run Model</button>
                 </th>
                 <th class="col-md-2"></th>
             </tr>
@@ -94,6 +103,108 @@
     <button type="button" class="btn btn-success mt-5 m-auto d-flex justify-content-center">Clear Results</button>
 
      <!-- Add any JavaScript links or scripts here -->
+    <script>
+
+        // this function returns opportunity text when given opportunity id from input
+        // ensure model.py is started first so port 5001 can be used 
+
+        function return_opportunity(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+                var serviceURL = "http://127.0.0.1:5001/opportunity/" + opportunity_id;
+                console.log(serviceURL);
+
+                const response = await fetch(serviceURL, {
+                    method: "GET",
+                });
+
+                try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        console.log(result.opportunity)
+                        document.getElementById("opportunityId_output").innerHTML = "Opportunity ID exists! :)";
+                    }
+                }catch{
+                    document.getElementById("opportunityId_output").innerHTML = "Invalid Opportunity ID";
+                }
+            })
+        };
+
+        function get_classification_result(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+
+                // serviceurl from main.py
+                 var serviceURL = "http://127.0.0.1:5001/classification/" + opportunity_id;
+                 console.log(serviceURL)
+
+                 const response = await fetch(serviceURL, {
+                    method: "GET",
+                 });
+
+                 try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        if (response.status === 200){
+                            console.log(result);
+                            document.getElementById("classificationOutput").innerHTML = result;
+                        }
+                    }
+                 }catch{
+                    console.log('error');
+                 }
+            })
+
+            if (opportunity_id != ""){
+                console.log("ok!")
+            }
+        };
+
+
+        function get_summarization_result(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+
+                // serviceurl from main.py
+                 var serviceURL = "http://127.0.0.1:5001/summarization/" + opportunity_id;
+                 console.log(serviceURL)
+
+                 const response = await fetch(serviceURL, {
+                    method: "GET",
+                 });
+
+                 try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        if (response.status === 200){
+                            console.log(result);
+                            document.getElementById("summarizationOutput").innerHTML = result;
+                        }
+                    }
+                 }catch{
+                    console.log('error');
+                 }
+            })
+
+            if (opportunity_id != ""){
+                console.log("ok!");
+            }   
+        }
+
+
+        
+    </script>
+
+
     <!-- Add the SheetJS library for Excel file handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
