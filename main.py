@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import os
-# Importing necessary libraries for handling Excel and BigQuery
 import pandas as pd
 from google.cloud import bigquery
 from flask_cors import CORS
+import json
 
 # Replace 'your-project-id' with your actual Google Cloud Project ID
 from dotenv import load_dotenv
@@ -14,6 +14,10 @@ DATASET_ID = os.getenv('DATASET_ID')
 
 app = Flask(__name__)
 CORS(app)
+
+# Set up BigQuery client
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'testing-bigquery-vertexai-service-account.json'
+client = bigquery.Client()
 
 @app.route('/')
 def index():
@@ -44,7 +48,7 @@ def upload():
             # Upload the data to BigQuery
             client = bigquery.Client(project="testing-bigquery-vertexai")
             dataset_id = "web_UI"
-            table_ref = client.dataset(dataset_id).table(table_id)
+            table_ref = client.dataset("testing-bigquery-vertexai").table("web_UI")
             job_config = bigquery.LoadJobConfig()
             job_config.autodetect = True
             job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
@@ -57,6 +61,75 @@ def upload():
 @app.route('/model_testing')
 def model_testing():
     return render_template('model_testing.html')
+
+@app.route('/opportunity/<string:id>', methods=["GET"])
+def return_text(id):
+    sql_query = """
+    SELECT * FROM `testing-bigquery-vertexai.MergerMarket.MergerMarket_Cleaned_v2`
+    WHERE Opportunity_ID = {id}
+    """.format(id=id)
+
+    query_job = client.query(sql_query)
+
+    for row in query_job.result():
+        opportunity = row['Opportunity']
+        value = {"opportunity": opportunity}
+        return jsonify(value)
+
+@app.route('/classification/<string:id>', methods=["GET"])
+def classify_text(id):
+    job = """
+    SELECT
+    ml_generate_text_result['predictions'][0]['content'] AS predicted_classification,
+    ml_generate_text_result['predictions'][0]['safetyAttributes']
+      AS safety_attributes,
+    * EXCEPT (ml_generate_text_result)
+    FROM
+    ML.GENERATE_TEXT(
+      MODEL `bqml_tutorial.llm_model`,
+      (
+        SELECT
+          CONCAT('Your task is to perform text classification on the following text, and return one of the following categories: ```Completed or Available```...',
+          Opportunity) AS prompt,
+          *
+        FROM
+          `testing-bigquery-vertexai.MergerMarket.MergerMarket_Cleaned_v2`
+        WHERE Opportunity_ID = {id}
+      ),
+      STRUCT(
+        0.2 AS temperature,
+        10 AS max_output_tokens));""".format(id=id)
+
+    result = client.query(job)
+    for row in result:
+        return row[0]
+
+@app.route('/summarization/<string:id>', methods=["GET"])
+def summarize_text(id):
+    job = """
+    SELECT
+    ml_generate_text_result['predictions'][0]['content'] AS predicted_classification,
+    ml_generate_text_result['predictions'][0]['safetyAttributes']
+      AS safety_attributes,
+    * EXCEPT (ml_generate_text_result)
+    FROM
+    ML.GENERATE_TEXT(
+      MODEL `bqml_tutorial.llm_model`,
+      (
+        SELECT
+          CONCAT('Summarize the following text in 100 words: ', Opportunity) AS prompt,
+          *
+        FROM
+          `testing-bigquery-vertexai.MergerMarket.MergerMarket_Cleaned_v2`
+        WHERE Opportunity_ID = {id}
+      ),
+      STRUCT(
+        0.2 AS temperature,
+        200 AS max_output_tokens));""".format(id=id)
+
+    result = client.query(job)
+    for row in result:
+        return row[0]
 
 if __name__ == '__main__':
     app.run(debug=True)

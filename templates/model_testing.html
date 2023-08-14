@@ -113,7 +113,7 @@
             console.log(opportunity_id)
 
             $(async () => {
-                var serviceURL = "http://127.0.0.1:5001/opportunity/" + opportunity_id;
+                var serviceURL = "http://127.0.0.1:5000/opportunity/" + opportunity_id;
                 console.log(serviceURL);
 
                 const response = await fetch(serviceURL, {
@@ -140,7 +140,7 @@
             $(async () => {
 
                 // serviceurl from main.py
-                 var serviceURL = "http://127.0.0.1:5001/classification/" + opportunity_id;
+                 var serviceURL = "http://127.0.0.1:5000/classification/" + opportunity_id;
                  console.log(serviceURL)
 
                  const response = await fetch(serviceURL, {
@@ -174,7 +174,7 @@
             $(async () => {
 
                 // serviceurl from main.py
-                 var serviceURL = "http://127.0.0.1:5001/summarization/" + opportunity_id;
+                 var serviceURL = "http://127.0.0.1:5000/summarization/" + opportunity_id;
                  console.log(serviceURL)
 
                  const response = await fetch(serviceURL, {
