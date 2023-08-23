@@ -138,6 +138,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // logic to dynamically fill up input field
+    document.getElementById('fileInput').addEventListener('change', function() {
+        const fileInput = document.getElementById('fileInput');
+        const tableIdInput = document.getElementById('tableIdInput');
+      
+        if (fileInput.files.length > 0) {
+          const uploadedFile = fileInput.files[0];
+          const fileName = uploadedFile.name;
+      
+          // Extract the first word from the file name
+          const firstWord = fileName.split(/[_\s]/)[0];
+      
+          // Get the current date in the format DD-MM-YY
+          const currentDate = new Date().toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit'
+          }).replace(/\//g, '-');
+      
+          // Construct the dynamic table ID
+          const dynamicTableId = `${firstWord}_${currentDate}`;
+      
+          // Fill the table ID input field
+          tableIdInput.value = dynamicTableId;
+        }
+      });
+
 
     // Add logic to handle form submission
     document.getElementById('uploadForm').addEventListener('submit', function (event) {

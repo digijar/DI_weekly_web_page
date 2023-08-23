@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previewing tables</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .navbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .navbar-nav {
+            margin-right: auto;
+        }
+
+        .tile-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Adjust grid-template-columns for the last tile */
+        .tile-container .tile-center {
+            grid-column: span 2; /* Span 2 columns for the centered tile */
+        }
+
+        .tile {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .tile img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+
+        .tile-title {
+            padding: 10px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+        }
+
+        .tile-center {
+            margin: 0 auto; /* This centers the tile horizontally */
+        }
+
+        /* Add this CSS to style the displayed table */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table td {
+            white-space: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Add this CSS to style the "Expand" button */
+        .expand-button {
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        /* Add this CSS to adjust the layout when table is displayed */
+        .table-details {
+            max-width: 800px;
+            padding: 0;
+        }
+
+        /* Add this CSS to change cell color when editing starts */
+        .table td[contenteditable="true"]:focus {
+            background-color: orange;
+        }
+        .table td.expanded div[contenteditable="true"]:focus {
+            background-color: orange;
+            padding: 8px;
+            margin: -8px; /* Counteract padding to maintain cell size */
+            border: 1px solid #ccc;
+            white-space: normal;
+            overflow: visible;
+        }
+
+        .button-container {
+            display: flex; /* Use flexbox to align buttons horizontally */
+            align-items: center; /* Center items vertically within the container */
+            margin-top: 10px; /* Adjust margin as needed */
+        }
+
+        .save-button,
+        .refresh-button {
+            margin-right: 10px; /* Add space between buttons */
+        }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <!-- <a class="navbar-brand" href="#">Excel File Upload to BigQuery</a> -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Upload</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/view_table">View Table</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/preview">Preview Tables</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="button-container">
+                <div class="table-name"></div>
+                <div class="refresh-button"></div>
+                <div class="save-button"></div>
+            </div>
+        </div>
+    </nav>
+    
+    <h1 style="margin-top: 5px;">Preview Tables</h1>
+
+
+    <div class="table-details" style="display: none;"></div>
+
+    <div class="tile-container">
+        <div class="tile" id="merger-market">
+            <img src="{{ url_for('static', filename='images/MergerMarket.jpg') }}">
+            <div class="tile-title">MergerMarket</div>
+        </div>
+        <div class="tile" id="weekly-scan">
+            <img src="{{ url_for('static', filename='images/Weekly_Scan.jpg') }}">
+            <div class="tile-title">Market Scan</div>
+        </div>
+        <div class="tile tile-center" id="rolling-shortlist">
+            <img src="{{ url_for('static', filename='images/Rolling_Shortlist.jpg') }}">
+            <div class="tile-title">Rolling Shortlist</div>
+        </div>
+    </div>
+    
+
+    <!-- Add any JavaScript links or scripts here -->
+    <!-- Add the SheetJS library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <!-- Add Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+
+    <!-- Add jQuery for making AJAX requests -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            function fetchAndDisplayTableData(tableName) {
+                $.get(`http://127.0.0.1:5003/get_table/${tableName}`, function(data) {
+                    const tableData = data; // Already parsed JSON
+
+                    // Generate a table HTML using the fetched data
+                    let tableHtml = '<table class="table">';
+                    
+                    // Generate table headers from the first row
+                    const firstRow = tableData[Object.keys(tableData)[0]]; // Get the first row for headers
+                    tableHtml += '<thead><tr>';
+                    for (const key in firstRow) {
+                        tableHtml += `<th>${key}</th>`;
+                    }
+                    tableHtml += '</tr></thead>';
+                    
+                    // Generate table rows
+                    tableHtml += '<tbody>';
+                    for (const opportunityId in tableData) {
+                        const row = tableData[opportunityId];
+                        tableHtml += '<tr>';
+                        for (const key in row) {
+                            const columnName = key; // Getting the column name
+                            const cellContent = row[key];
+                            if (cellContent !== null) {
+                                if (cellContent.length > 30) {
+                                    const uniqueID = `modal-${key.substring(0, 3)}`;
+                                    tableHtml += `
+                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                            <span><button class="btn btn-primary expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">Expand</button></span>
+                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body"></div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="button" class="btn btn-primary">Save changes</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        `;
+                                } else {
+                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                                }
+                            } else {
+                                tableHtml += `<td> </td>`;
+                            }
+                        }
+                        tableHtml += '</tr>';
+                    }
+
+                    // Add editable attribute to each cell
+                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+
+                    // Append table name
+                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                    $('.table-name').html(tableNameHtml);
+
+                    // Append Save Changes button
+                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                    $('.save-button').html(saveHtml);
+
+                    // Append Refresh Changes button
+                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                    $('.refresh-button').html(refreshHtml);
+
+                    // Update the table details placeholder and show it
+                    $('.table-details').html(tableHtml).show();
+
+                    // Hide the tile container
+                    $('.tile-container').hide();
+                });
+            }
+
+            // Function specifically for MergerMarket table
+            function updateMergerMarket() {
+                const editedCell = $('.table td.editing'); // Get the edited cell
+                const tableName = "MergerMarket";
+
+                if (editedCell.length === 0) {
+                    alert("No cell is being edited.");
+                    return;
+                }
+
+                const opportunityId = editedCell.closest('tr').find('td:nth-child(16)').text(); // 16th column is Opportunity_ID
+                const columnName = editedCell.data('col-name');
+                const cellValue = editedCell.text();
+
+                console.log(opportunityId);
+                console.log(columnName);
+                console.log(cellValue);
+
+                const updatedRow = {
+                    row_id: opportunityId,
+                    column_name: columnName,
+                    edited_value: cellValue
+                };
+
+                // Send the updated data to the backend
+                $.ajax({
+                    url: `http://127.0.0.1:5003/update_table/${tableName}`,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify([updatedRow]),
+                    success: function(response) {
+                        console.log(response);
+                        if (response.success) {
+                            console.log("edit successful!");
+                            alert("Edit successful!");
+                            fetchAndDisplayTableData(tableName); // Reload the table after successful update
+                        } else {
+                            displayErrorMessage("An error occurred while saving changes.");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                });
+            }
+
+            function displayErrorMessage(message) {
+                // Display error message to the user, e.g., using a modal or a notification
+                console.log(message);
+            }
+
+
+            // Function specifically for Weekly Scan table
+            function updateWeeklyScan() {
+                
+            };
+
+            // Function specifically for Rolling Shortlist table
+            function updateRollingShortlist() {
+
+            };
+
+            $('.tile').click(function() {
+                const tableName = $(this).find('.tile-title').text();
+                fetchAndDisplayTableData(tableName);
+            });
+
+            $(document).on('click', '#save-changes', function() {
+                const tableName = $('.table-name').text();
+                // captureAndSaveChanges(tableName);
+                updateMergerMarket();
+            });
+            
+            $(document).on('click', '.expand-button', function() {
+                const modalId = $(this).data('bs-target'); // Get the modal's target ID
+                const cellContent = $(this).closest('td').data('full-content');
+                
+                // Find the modal using its unique ID and show it
+                $(modalId).find('.modal-body').html(`<div contenteditable="true">${cellContent}</div>`);
+                console.log(modalId)
+                console.log(cellContent)
+                $(modalId).modal('show');
+            });
+
+            $(document).on('focus', '.table td[contenteditable="true"]', function() {
+                console.log("This cell is being edited!");
+                $(this).addClass('editing');
+            });
+        });
+
+
+    </script>
+</body>
+</html>

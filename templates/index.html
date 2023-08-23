@@ -21,6 +21,15 @@
         table.preview-table tr.alternate-row {
             background-color: #f2f2f2;
         }
+
+        .navbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .navbar-nav {
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +49,12 @@
                     <li class="nav-item active">
                         <a class="nav-link" href="/model_testing">Model Testing</a>
                     </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/view_table">View Table</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/preview">Preview Tables</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -49,7 +64,7 @@
     <form id="uploadForm" enctype="application/x-www-form-urlencoded" style="margin-bottom: 10px;">
         <input type="file" id="fileInput" name="file" accept=".xls, .xlsx" multiple>
         <label for="tableIdInput" style="margin-left: 10px;">Table ID:</label>
-        <input type="text" id="tableIdInput" name="tableId" required>
+        <input type="text" id="tableIdInput" name="tableId" disabled>
         <button type="submit">Upload</button>
     </form>
 
