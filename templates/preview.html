@@ -15,8 +15,12 @@
         }
 
         .navbar {
+            position: sticky;
             background-color: #f8f9fa;
             border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Ensure Navbar is above other content */
         }
 
         .navbar-nav {
@@ -70,7 +74,7 @@
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            position: relative;
         }
 
         .table th,
@@ -86,10 +90,12 @@
             text-overflow: ellipsis;
         }
 
-        /* Add this CSS to style the "Expand" button */
-        .expand-button {
-            display: inline-block;
-            cursor: pointer;
+        .table th {
+            position: sticky;
+            top: 0px; /* 63px for below navbar */
+            background-color: #dbdbdb; /* Set the background color */
+            color: black; /* Set the text color */
+            z-index: 1001;
         }
 
         /* Add this CSS to adjust the layout when table is displayed */
@@ -121,11 +127,19 @@
         .refresh-button {
             margin-right: 10px; /* Add space between buttons */
         }
+
+        /* Add this CSS to style the "Expand" button */
+        .expand-button {
+            border-radius: 10px;
+            border: none;
+            display: inline-block;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     
-    <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <!-- <a class="navbar-brand" href="#">Excel File Upload to BigQuery</a> -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,6 +160,9 @@
                     <li class="nav-item active">
                         <a class="nav-link" href="/preview">Preview Tables</a>
                     </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/slicer">Excel Slicer</a>
+                    </li>
                 </ul>
             </div>
 
@@ -156,11 +173,14 @@
             </div>
         </div>
     </nav>
-    
-    <h1 style="margin-top: 5px;">Preview Tables</h1>
 
+    <div id="slicer-container">
+        <!-- Dropdown slicers will be generated here -->
+    </div>
 
-    <div class="table-details" style="display: none;"></div>
+    <div class="table-details" style="display: none;">
+        <!-- Table Data from BigQuery will be generated here -->
+    </div>
 
     <div class="tile-container">
         <div class="tile" id="merger-market">
@@ -168,7 +188,7 @@
             <div class="tile-title">MergerMarket</div>
         </div>
         <div class="tile" id="weekly-scan">
-            <img src="{{ url_for('static', filename='images/Weekly_Scan.jpg') }}">
+            <img src="{{ url_for('static', filename='images/Market_Scan.jpg') }}">
             <div class="tile-title">Market Scan</div>
         </div>
         <div class="tile tile-center" id="rolling-shortlist">
@@ -189,18 +209,53 @@
 
     <script>
         $(document).ready(function() {
-            function fetchAndDisplayTableData(tableName) {
-                $.get(`http://127.0.0.1:5003/get_table/${tableName}`, function(data) {
+
+            // To display MergerMarket table
+            function displayMergerMarket() {
+                $.get(`http://127.0.0.1:5003/get_mergermarket`, function(data) {
+                    tableName = "MergerMarket"
+
+                    const columnOrder = [
+                        "Opportunity_ID",
+                        "Date",
+                        "Value INR_m",
+                        "Value Description",
+                        "Heading",
+                        "Opportunity",
+                        "Targets",
+                        "Lead type",
+                        "Type of transaction",
+                        "HS sector classification",
+                        "Short BD",
+                        "Source",
+                        "Intelligence Type",
+                        "Intelligence Grade",
+                        "Intelligence Size",
+                        "Stake Value",
+                        "Dominant Sector",
+                        "Sectors",
+                        "Sub Sectors",
+                        "Dominant Geography",
+                        "Geography",
+                        "States",
+                        "Topics",
+                        "Bidders",
+                        "Vendors",
+                        "Issuers",
+                        "Competitors",
+                        "Others",
+                        "Completed"
+                    ];
+
                     const tableData = data; // Already parsed JSON
 
                     // Generate a table HTML using the fetched data
                     let tableHtml = '<table class="table">';
-                    
-                    // Generate table headers from the first row
-                    const firstRow = tableData[Object.keys(tableData)[0]]; // Get the first row for headers
+                        
+                    // Generate table headers
                     tableHtml += '<thead><tr>';
-                    for (const key in firstRow) {
-                        tableHtml += `<th>${key}</th>`;
+                    for (const columnName of columnOrder) {
+                        tableHtml += `<th>${columnName}</th>`;
                     }
                     tableHtml += '</tr></thead>';
                     
@@ -209,15 +264,14 @@
                     for (const opportunityId in tableData) {
                         const row = tableData[opportunityId];
                         tableHtml += '<tr>';
-                        for (const key in row) {
-                            const columnName = key; // Getting the column name
-                            const cellContent = row[key];
+                        for (const columnName of columnOrder) {
+                            const cellContent = row[columnName];
                             if (cellContent !== null) {
                                 if (cellContent.length > 30) {
-                                    const uniqueID = `modal-${key.substring(0, 3)}`;
+                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
                                     tableHtml += `
                                         <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                            <span><button class="btn btn-primary expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">Expand</button></span>
+                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
                                             <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                 <div class="modal-dialog modal-dialog-scrollable">
                                                     <div class="modal-content">
@@ -227,7 +281,234 @@
                                                         <div class="modal-body"></div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="button" class="btn btn-primary">Save changes</button>
+                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        `;
+                                } else {
+                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                                }
+                            } else {
+                                tableHtml += `<td> </td>`;
+                            }
+                        }
+                        tableHtml += '</tr>';
+                    }
+
+                    // Add editable attribute to each cell
+                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+
+                    // Append table name
+                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                    $('.table-name').html(tableNameHtml);
+
+                    // Append Save Changes button
+                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                    $('.save-button').html(saveHtml);
+
+                    // Append Refresh Changes button
+                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                    $('.refresh-button').html(refreshHtml);
+
+                    // Update the table details placeholder and show it
+                    $('.table-details').html(tableHtml).show();
+
+                    // Hide the tile container
+                    $('.tile-container').hide();
+
+                    // Generate dropdown slicers for each column
+                    const slicerContainer = document.getElementById("slicer-container");
+
+                    for (const columnName of columnOrder) {
+                        // if (columnName in (""))
+                        const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
+                        
+                        const dropdown = document.createElement("select");
+                        dropdown.setAttribute("data-col-name", columnName);
+                        
+                        const defaultOption = document.createElement("option");
+                        defaultOption.value = "";
+                        defaultOption.text = `Filter ${columnName}`;
+                        dropdown.appendChild(defaultOption);
+                        
+                        for (const value of uniqueValues) {
+                            const option = document.createElement("option");
+                            option.value = value;
+                            option.text = value;
+                            dropdown.appendChild(option);
+                        }
+
+                        dropdown.addEventListener("change", updateTable);
+                        slicerContainer.appendChild(dropdown);
+                    }
+                });
+            }
+
+            // FUNCTIONS FOR SLICER
+            function updateTable() {
+                const filters = {};
+
+                // Get selected filter values
+                const dropdowns = slicerContainer.querySelectorAll("select");
+                dropdowns.forEach(dropdown => {
+                    const columnName = dropdown.getAttribute("data-col-name");
+                    const selectedValue = dropdown.value;
+                    if (selectedValue !== "") {
+                        filters[columnName] = selectedValue;
+                    }
+                });
+
+                // Apply filters and update the displayed table
+                const filteredData = applyFilters(tableData, filters);
+                renderContent(filteredData);
+            }
+
+            function applyFilters(data, filters) {
+                return data.filter(row => {
+                    for (const columnName in filters) {
+                        if (row[columnName] !== filters[columnName]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
+
+            // Function specifically for MergerMarket table
+            function updateMergerMarket() {
+                const editedCell = $('.table td.editing'); // Get the edited cell
+                const tableName = "MergerMarket";
+
+                if (editedCell.length === 0) {
+                    const editedModal = $('div.editing');
+                    if (editedModal.length === 0) {
+                        alert("No cell is being edited.");
+                        return; 
+                    }
+                }
+
+                const opportunityId = editedCell.closest('tr').find('td:nth-child(1)').text(); // 16th column is Opportunity_ID
+                const columnName = editedCell.data('col-name');
+                const cellValue = editedCell.text();
+
+                console.log(opportunityId);
+                console.log(columnName);
+                console.log(cellValue);
+
+                const updatedRow = {
+                    row_id: opportunityId,
+                    column_name: columnName,
+                    edited_value: cellValue
+                };
+
+                // Send the updated data to the backend
+                $.ajax({
+                    url: `http://127.0.0.1:5003/update_mergermarket`,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify([updatedRow]),
+                    success: function(response) {
+                        console.log(response);
+                        if (response.success) {
+                            console.log("edit successful!");
+                            alert("Edit successful!");
+                            displayMergerMarket(); // Reload the table after successful update
+                        } else {
+                            displayErrorMessage("An error occurred while saving changes.");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                });
+            }
+
+            function displayErrorMessage(message) {
+                // Display error message to the user, e.g., using a modal or a notification
+                console.log(message);
+            }
+
+            // To display Market Scan table
+            function displayMarketScan() {
+                $.get(`http://127.0.0.1:5003/get_marketscan`, function(data) {
+                    tableName = "Market Scan"
+
+                    const columnOrder = [
+                        "Num",
+                        "Picks",
+                        "Captured in the week",
+                        "Date",
+                        "Lead type",
+                        "Target HS industry classification",
+                        "Dominant sector_as per MM",
+                        "Sectors_as per MM",
+                        "Sub Sectors_as per MM",
+                        "HS Target region",
+                        "Dominant country",
+                        "Countries",
+                        "Next Steps",
+                        "Target",
+                        "Target_Chinese",
+                        "Deal intelligence",
+                        "Short BD",
+                        "Bidders",
+                        "Sellers_or_Vendors",
+                        "Type of transaction",
+                        "Intelligence type_as per MM",
+                        "Topics_as per MM",
+                        "Value_USDm",
+                        "Value description",
+                        "Intelligence size",
+                        "Intelligence size bucket",
+                        "Stake value_percent",
+                        "Held by ASPAC priority firm_Y_or_N",
+                        "PE priority firm ",
+                        "Held since",
+                        "Held for more than three years_Y_N_NA",
+                        "KPMG credentials_PE_Company_Both_N",
+                        "KPMG firm",
+                        "Engagement partner",
+                    ];
+
+                    const tableData = data; // Already parsed JSON
+
+                    // Generate a table HTML using the fetched data
+                    let tableHtml = '<table class="table">';
+                        
+                    // Generate table headers
+                    tableHtml += '<thead><tr>';
+                    for (const columnName of columnOrder) {
+                        tableHtml += `<th>${columnName}</th>`;
+                    }
+                    tableHtml += '</tr></thead>';
+                    
+                    // Generate table rows
+                    tableHtml += '<tbody>';
+                    for (const opportunityId in tableData) {
+                        const row = tableData[opportunityId];
+                        tableHtml += '<tr>';
+                        for (const columnName of columnOrder) {
+                            const cellContent = row[columnName];
+                            if (cellContent !== null) {
+                                if (cellContent.length > 30) {
+                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                    tableHtml += `
+                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body"></div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -267,33 +548,37 @@
                 });
             }
 
-            // Function specifically for MergerMarket table
-            function updateMergerMarket() {
+
+            // Function specifically for Market Scan table
+            function updateMarketScan() {
                 const editedCell = $('.table td.editing'); // Get the edited cell
-                const tableName = "MergerMarket";
+                const tableName = "Market Scan";
 
                 if (editedCell.length === 0) {
-                    alert("No cell is being edited.");
-                    return;
+                    const editedModal = $('div.editing');
+                    if (editedModal.length === 0) {
+                        alert("No cell is being edited.");
+                        return; 
+                    }
                 }
 
-                const opportunityId = editedCell.closest('tr').find('td:nth-child(16)').text(); // 16th column is Opportunity_ID
+                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
                 const columnName = editedCell.data('col-name');
                 const cellValue = editedCell.text();
 
-                console.log(opportunityId);
+                console.log(Num);
                 console.log(columnName);
                 console.log(cellValue);
 
                 const updatedRow = {
-                    row_id: opportunityId,
+                    row_id: Num,
                     column_name: columnName,
                     edited_value: cellValue
                 };
 
                 // Send the updated data to the backend
                 $.ajax({
-                    url: `http://127.0.0.1:5003/update_table/${tableName}`,
+                    url: `http://127.0.0.1:5003/update_marketscan`,
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify([updatedRow]),
@@ -302,7 +587,7 @@
                         if (response.success) {
                             console.log("edit successful!");
                             alert("Edit successful!");
-                            fetchAndDisplayTableData(tableName); // Reload the table after successful update
+                            displayMarketScan(); // Reload the table after successful update
                         } else {
                             displayErrorMessage("An error occurred while saving changes.");
                         }
@@ -312,33 +597,193 @@
                         displayErrorMessage("An error occurred while saving changes.");
                     }
                 });
-            }
-
-            function displayErrorMessage(message) {
-                // Display error message to the user, e.g., using a modal or a notification
-                console.log(message);
-            }
-
-
-            // Function specifically for Weekly Scan table
-            function updateWeeklyScan() {
-                
             };
+
+
+            function displayRollingShortlist() {
+                $.get(`http://127.0.0.1:5003/get_rollingshortlist`, function(data) {
+                    tableName = "Rolling Shortlist"
+
+                    const columnOrder = [
+                    "Num",
+                    "Captured date",
+                    "BP comments",
+                    "Partner_or_Director",
+                    "Target country",
+                    "Sub sector",
+                    "Source",
+                    " Target",
+                    "Business Description",
+                    "Financials",
+                    "Revenue_USD_M",
+                    "EBITDA_USD_M",
+                    "Valuation_USD_M",
+                    "Other Info",
+                    "Deal Intelligence info",
+                    "News Date",
+                    "KPMG View - Redacted",
+                    "Credentials",
+                    "HS contact",
+                    "Investment date",
+                    "Geographic region",
+                    "Asset pack ",
+                    "Target Region",
+                    "Shareholders",
+                    "Lead type",
+                    "Target HS industry classification ",
+                    "Stake for sale_percent",
+                    "Value_USD_M",
+                    "Value description ",
+                    "Website",
+                    ];
+
+                    const tableData = data; // Already parsed JSON
+
+                    // Generate a table HTML using the fetched data
+                    let tableHtml = '<table class="table">';
+                        
+                    // Generate table headers
+                    tableHtml += '<thead><tr>';
+                    for (const columnName of columnOrder) {
+                        tableHtml += `<th>${columnName}</th>`;
+                    }
+                    tableHtml += '</tr></thead>';
+                    
+                    // Generate table rows
+                    tableHtml += '<tbody>';
+                    for (const opportunityId in tableData) {
+                        const row = tableData[opportunityId];
+                        tableHtml += '<tr>';
+                        for (const columnName of columnOrder) {
+                            const cellContent = row[columnName];
+                            if (cellContent !== null) {
+                                if (cellContent.length > 30) {
+                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                    tableHtml += `
+                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body"></div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        `;
+                                } else {
+                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                                }
+                            } else {
+                                tableHtml += `<td> </td>`;
+                            }
+                        }
+                        tableHtml += '</tr>';
+                    }
+
+                    // Add editable attribute to each cell
+                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+
+                    // Append table name
+                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                    $('.table-name').html(tableNameHtml);
+
+                    // Append Save Changes button
+                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                    $('.save-button').html(saveHtml);
+
+                    // Append Refresh Changes button
+                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                    $('.refresh-button').html(refreshHtml);
+
+                    // Update the table details placeholder and show it
+                    $('.table-details').html(tableHtml).show();
+
+                    // Hide the tile container
+                    $('.tile-container').hide();
+                });
+            }
+
 
             // Function specifically for Rolling Shortlist table
             function updateRollingShortlist() {
+                const editedCell = $('.table td.editing'); // Get the edited cell
+                const tableName = "Rolling Shortlist";
 
+                if (editedCell.length === 0) {
+                    const editedModal = $('div.editing');
+                    if (editedModal.length === 0) {
+                        alert("No cell is being edited.");
+                        return; 
+                    }
+                }
+
+                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
+                const columnName = editedCell.data('col-name');
+                const cellValue = editedCell.text();
+
+                console.log(Num);
+                console.log(columnName);
+                console.log(cellValue);
+
+                const updatedRow = {
+                    row_id: Num,
+                    column_name: columnName,
+                    edited_value: cellValue
+                };
+
+                // Send the updated data to the backend
+                $.ajax({
+                    url: `http://127.0.0.1:5003/update_rollingshortlist`,
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify([updatedRow]),
+                    success: function(response) {
+                        console.log(response);
+                        if (response.success) {
+                            console.log("edit successful!");
+                            alert("Edit successful!");
+                            displayRollingShortlist(); // Reload the table after successful update
+                        } else {
+                            displayErrorMessage("An error occurred while saving changes.");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                });
             };
 
             $('.tile').click(function() {
                 const tableName = $(this).find('.tile-title').text();
-                fetchAndDisplayTableData(tableName);
+
+                if (tableName === "MergerMarket") {
+                    displayMergerMarket();
+                } else if (tableName === "Market Scan") {
+                    displayMarketScan();
+                } else {
+                    displayRollingShortlist()
+                }
             });
 
             $(document).on('click', '#save-changes', function() {
                 const tableName = $('.table-name').text();
-                // captureAndSaveChanges(tableName);
-                updateMergerMarket();
+                if (tableName === "MergerMarket") {
+                    updateMergerMarket();
+                } else if (tableName === "Market Scan") {
+                    updateMarketScan();
+                } else {
+                    updateRollingShortlist();
+                }
+                
             });
             
             $(document).on('click', '.expand-button', function() {
@@ -353,6 +798,11 @@
             });
 
             $(document).on('focus', '.table td[contenteditable="true"]', function() {
+                console.log("This cell is being edited!");
+                $(this).addClass('editing');
+            });
+
+            $(document).on('focus', 'div[contenteditable="true"]', function() {
                 console.log("This cell is being edited!");
                 $(this).addClass('editing');
             });

@@ -66,5 +66,9 @@ def edit_row():
 def preview():
     return render_template('preview.html')
 
+@app.route('/slicer')
+def slicer():
+    return render_template('slicer.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
