@@ -135,6 +135,49 @@
             display: inline-block;
             cursor: pointer;
         }
+
+
+        /* for SLICER CONTAINER */
+        .slicer-container {
+            max-height: 150px;
+            width: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow: auto; /* Enable vertical scrollbar when content overflows */
+        }
+
+        .slicer {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .slicer-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .slicer-options label {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* Style checkboxes to make them more visible */
+        .slicer-options input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .slicer-options {
+            white-space: nowrap; /* Prevent line breaks */
+        }
+
+        /* Style the column search input boxes */
+        .column-search {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -196,619 +239,780 @@
             <div class="tile-title">Rolling Shortlist</div>
         </div>
     </div>
-    
-
-    <!-- Add any JavaScript links or scripts here -->
-    <!-- Add the SheetJS library for Excel file handling -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-    <!-- Add Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
-
-    <!-- Add jQuery for making AJAX requests -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-
-            // To display MergerMarket table
-            function displayMergerMarket() {
-                $.get(`http://127.0.0.1:5003/get_mergermarket`, function(data) {
-                    tableName = "MergerMarket"
-
-                    const columnOrder = [
-                        "Opportunity_ID",
-                        "Date",
-                        "Value INR_m",
-                        "Value Description",
-                        "Heading",
-                        "Opportunity",
-                        "Targets",
-                        "Lead type",
-                        "Type of transaction",
-                        "HS sector classification",
-                        "Short BD",
-                        "Source",
-                        "Intelligence Type",
-                        "Intelligence Grade",
-                        "Intelligence Size",
-                        "Stake Value",
-                        "Dominant Sector",
-                        "Sectors",
-                        "Sub Sectors",
-                        "Dominant Geography",
-                        "Geography",
-                        "States",
-                        "Topics",
-                        "Bidders",
-                        "Vendors",
-                        "Issuers",
-                        "Competitors",
-                        "Others",
-                        "Completed"
-                    ];
-
-                    const tableData = data; // Already parsed JSON
-
-                    // Generate a table HTML using the fetched data
-                    let tableHtml = '<table class="table">';
-                        
-                    // Generate table headers
-                    tableHtml += '<thead><tr>';
-                    for (const columnName of columnOrder) {
-                        tableHtml += `<th>${columnName}</th>`;
-                    }
-                    tableHtml += '</tr></thead>';
-                    
-                    // Generate table rows
-                    tableHtml += '<tbody>';
-                    for (const opportunityId in tableData) {
-                        const row = tableData[opportunityId];
-                        tableHtml += '<tr>';
-                        for (const columnName of columnOrder) {
-                            const cellContent = row[columnName];
-                            if (cellContent !== null) {
-                                if (cellContent.length > 30) {
-                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
-                                    tableHtml += `
-                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-scrollable">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body"></div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        `;
-                                } else {
-                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
-                                }
-                            } else {
-                                tableHtml += `<td> </td>`;
-                            }
-                        }
-                        tableHtml += '</tr>';
-                    }
-
-                    // Add editable attribute to each cell
-                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
-
-                    // Append table name
-                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
-                    $('.table-name').html(tableNameHtml);
-
-                    // Append Save Changes button
-                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
-                    $('.save-button').html(saveHtml);
-
-                    // Append Refresh Changes button
-                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
-                    $('.refresh-button').html(refreshHtml);
-
-                    // Update the table details placeholder and show it
-                    $('.table-details').html(tableHtml).show();
-
-                    // Hide the tile container
-                    $('.tile-container').hide();
-
-                    // Generate dropdown slicers for each column
-                    const slicerContainer = document.getElementById("slicer-container");
-
-                    for (const columnName of columnOrder) {
-                        // if (columnName in (""))
-                        const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
-                        
-                        const dropdown = document.createElement("select");
-                        dropdown.setAttribute("data-col-name", columnName);
-                        
-                        const defaultOption = document.createElement("option");
-                        defaultOption.value = "";
-                        defaultOption.text = `Filter ${columnName}`;
-                        dropdown.appendChild(defaultOption);
-                        
-                        for (const value of uniqueValues) {
-                            const option = document.createElement("option");
-                            option.value = value;
-                            option.text = value;
-                            dropdown.appendChild(option);
-                        }
-
-                        dropdown.addEventListener("change", updateTable);
-                        slicerContainer.appendChild(dropdown);
-                    }
-                });
-            }
-
-            // FUNCTIONS FOR SLICER
-            function updateTable() {
-                const filters = {};
-
-                // Get selected filter values
-                const dropdowns = slicerContainer.querySelectorAll("select");
-                dropdowns.forEach(dropdown => {
-                    const columnName = dropdown.getAttribute("data-col-name");
-                    const selectedValue = dropdown.value;
-                    if (selectedValue !== "") {
-                        filters[columnName] = selectedValue;
-                    }
-                });
-
-                // Apply filters and update the displayed table
-                const filteredData = applyFilters(tableData, filters);
-                renderContent(filteredData);
-            }
-
-            function applyFilters(data, filters) {
-                return data.filter(row => {
-                    for (const columnName in filters) {
-                        if (row[columnName] !== filters[columnName]) {
-                            return false;
-                        }
-                    }
-                    return true;
-                });
-            }
-
-            // Function specifically for MergerMarket table
-            function updateMergerMarket() {
-                const editedCell = $('.table td.editing'); // Get the edited cell
-                const tableName = "MergerMarket";
-
-                if (editedCell.length === 0) {
-                    const editedModal = $('div.editing');
-                    if (editedModal.length === 0) {
-                        alert("No cell is being edited.");
-                        return; 
-                    }
-                }
-
-                const opportunityId = editedCell.closest('tr').find('td:nth-child(1)').text(); // 16th column is Opportunity_ID
-                const columnName = editedCell.data('col-name');
-                const cellValue = editedCell.text();
-
-                console.log(opportunityId);
-                console.log(columnName);
-                console.log(cellValue);
-
-                const updatedRow = {
-                    row_id: opportunityId,
-                    column_name: columnName,
-                    edited_value: cellValue
-                };
-
-                // Send the updated data to the backend
-                $.ajax({
-                    url: `http://127.0.0.1:5003/update_mergermarket`,
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify([updatedRow]),
-                    success: function(response) {
-                        console.log(response);
-                        if (response.success) {
-                            console.log("edit successful!");
-                            alert("Edit successful!");
-                            displayMergerMarket(); // Reload the table after successful update
-                        } else {
-                            displayErrorMessage("An error occurred while saving changes.");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(error);
-                        displayErrorMessage("An error occurred while saving changes.");
-                    }
-                });
-            }
-
-            function displayErrorMessage(message) {
-                // Display error message to the user, e.g., using a modal or a notification
-                console.log(message);
-            }
-
-            // To display Market Scan table
-            function displayMarketScan() {
-                $.get(`http://127.0.0.1:5003/get_marketscan`, function(data) {
-                    tableName = "Market Scan"
-
-                    const columnOrder = [
-                        "Num",
-                        "Picks",
-                        "Captured in the week",
-                        "Date",
-                        "Lead type",
-                        "Target HS industry classification",
-                        "Dominant sector_as per MM",
-                        "Sectors_as per MM",
-                        "Sub Sectors_as per MM",
-                        "HS Target region",
-                        "Dominant country",
-                        "Countries",
-                        "Next Steps",
-                        "Target",
-                        "Target_Chinese",
-                        "Deal intelligence",
-                        "Short BD",
-                        "Bidders",
-                        "Sellers_or_Vendors",
-                        "Type of transaction",
-                        "Intelligence type_as per MM",
-                        "Topics_as per MM",
-                        "Value_USDm",
-                        "Value description",
-                        "Intelligence size",
-                        "Intelligence size bucket",
-                        "Stake value_percent",
-                        "Held by ASPAC priority firm_Y_or_N",
-                        "PE priority firm ",
-                        "Held since",
-                        "Held for more than three years_Y_N_NA",
-                        "KPMG credentials_PE_Company_Both_N",
-                        "KPMG firm",
-                        "Engagement partner",
-                    ];
-
-                    const tableData = data; // Already parsed JSON
-
-                    // Generate a table HTML using the fetched data
-                    let tableHtml = '<table class="table">';
-                        
-                    // Generate table headers
-                    tableHtml += '<thead><tr>';
-                    for (const columnName of columnOrder) {
-                        tableHtml += `<th>${columnName}</th>`;
-                    }
-                    tableHtml += '</tr></thead>';
-                    
-                    // Generate table rows
-                    tableHtml += '<tbody>';
-                    for (const opportunityId in tableData) {
-                        const row = tableData[opportunityId];
-                        tableHtml += '<tr>';
-                        for (const columnName of columnOrder) {
-                            const cellContent = row[columnName];
-                            if (cellContent !== null) {
-                                if (cellContent.length > 30) {
-                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
-                                    tableHtml += `
-                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-scrollable">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body"></div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        `;
-                                } else {
-                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
-                                }
-                            } else {
-                                tableHtml += `<td> </td>`;
-                            }
-                        }
-                        tableHtml += '</tr>';
-                    }
-
-                    // Add editable attribute to each cell
-                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
-
-                    // Append table name
-                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
-                    $('.table-name').html(tableNameHtml);
-
-                    // Append Save Changes button
-                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
-                    $('.save-button').html(saveHtml);
-
-                    // Append Refresh Changes button
-                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
-                    $('.refresh-button').html(refreshHtml);
-
-                    // Update the table details placeholder and show it
-                    $('.table-details').html(tableHtml).show();
-
-                    // Hide the tile container
-                    $('.tile-container').hide();
-                });
-            }
 
 
-            // Function specifically for Market Scan table
-            function updateMarketScan() {
-                const editedCell = $('.table td.editing'); // Get the edited cell
-                const tableName = "Market Scan";
+<!-- Add any JavaScript links or scripts here -->
+<!-- Add the SheetJS library for Excel file handling -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<!-- Add Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 
-                if (editedCell.length === 0) {
-                    const editedModal = $('div.editing');
-                    if (editedModal.length === 0) {
-                        alert("No cell is being edited.");
-                        return; 
-                    }
-                }
+<!-- Add jQuery for making AJAX requests -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
-                const columnName = editedCell.data('col-name');
-                const cellValue = editedCell.text();
+<script>
+    $(document).ready(function() {
 
-                console.log(Num);
-                console.log(columnName);
-                console.log(cellValue);
+        // To display MergerMarket table
+        function displayMergerMarket() {
+            $.get(`http://127.0.0.1:5003/get_mergermarket`, function(data) {
+                tableName = "MergerMarket"
 
-                const updatedRow = {
-                    row_id: Num,
-                    column_name: columnName,
-                    edited_value: cellValue
-                };
-
-                // Send the updated data to the backend
-                $.ajax({
-                    url: `http://127.0.0.1:5003/update_marketscan`,
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify([updatedRow]),
-                    success: function(response) {
-                        console.log(response);
-                        if (response.success) {
-                            console.log("edit successful!");
-                            alert("Edit successful!");
-                            displayMarketScan(); // Reload the table after successful update
-                        } else {
-                            displayErrorMessage("An error occurred while saving changes.");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(error);
-                        displayErrorMessage("An error occurred while saving changes.");
-                    }
-                });
-            };
-
-
-            function displayRollingShortlist() {
-                $.get(`http://127.0.0.1:5003/get_rollingshortlist`, function(data) {
-                    tableName = "Rolling Shortlist"
-
-                    const columnOrder = [
-                    "Num",
-                    "Captured date",
-                    "BP comments",
-                    "Partner_or_Director",
-                    "Target country",
-                    "Sub sector",
-                    "Source",
-                    " Target",
-                    "Business Description",
-                    "Financials",
-                    "Revenue_USD_M",
-                    "EBITDA_USD_M",
-                    "Valuation_USD_M",
-                    "Other Info",
-                    "Deal Intelligence info",
-                    "News Date",
-                    "KPMG View - Redacted",
-                    "Credentials",
-                    "HS contact",
-                    "Investment date",
-                    "Geographic region",
-                    "Asset pack ",
-                    "Target Region",
-                    "Shareholders",
+                const columnOrder = [
+                    "Opportunity_ID",
+                    "Date",
+                    "Value INR_m",
+                    "Value Description",
+                    "Heading",
+                    "Opportunity",
+                    "Targets",
                     "Lead type",
-                    "Target HS industry classification ",
-                    "Stake for sale_percent",
-                    "Value_USD_M",
-                    "Value description ",
-                    "Website",
-                    ];
+                    "Type of transaction",
+                    "HS sector classification",
+                    "Short BD",
+                    "Source",
+                    "Intelligence Type",
+                    "Intelligence Grade",
+                    "Intelligence Size",
+                    "Stake Value",
+                    "Dominant Sector",
+                    "Sectors",
+                    "Sub Sectors",
+                    "Dominant Geography",
+                    "Geography",
+                    "States",
+                    "Topics",
+                    "Bidders",
+                    "Vendors",
+                    "Issuers",
+                    "Competitors",
+                    "Others",
+                    "Completed"
+                ];
 
-                    const tableData = data; // Already parsed JSON
+                const tableData = data; // Already parsed JSON
 
-                    // Generate a table HTML using the fetched data
-                    let tableHtml = '<table class="table">';
-                        
-                    // Generate table headers
-                    tableHtml += '<thead><tr>';
-                    for (const columnName of columnOrder) {
-                        tableHtml += `<th>${columnName}</th>`;
-                    }
-                    tableHtml += '</tr></thead>';
+                // Generate a table HTML using the fetched data
+                let tableHtml = '<table class="table">';
                     
-                    // Generate table rows
-                    tableHtml += '<tbody>';
-                    for (const opportunityId in tableData) {
-                        const row = tableData[opportunityId];
-                        tableHtml += '<tr>';
-                        for (const columnName of columnOrder) {
-                            const cellContent = row[columnName];
-                            if (cellContent !== null) {
-                                if (cellContent.length > 30) {
-                                    const uniqueID = `modal-${columnName.substring(0, 3)}`;
-                                    tableHtml += `
-                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-scrollable">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body"></div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                        </div>
+                // Generate table headers
+                tableHtml += '<thead><tr>';
+                for (const columnName of columnOrder) {
+                    tableHtml += `<th>${columnName}</th>`;
+                }
+                tableHtml += '</tr></thead>';
+                
+                // Generate table rows
+                tableHtml += '<tbody>';
+                for (const opportunityId in tableData) {
+                    const row = tableData[opportunityId];
+                    tableHtml += '<tr>';
+                    for (const columnName of columnOrder) {
+                        const cellContent = row[columnName];
+                        if (cellContent !== null) {
+                            if (cellContent.length > 30) {
+                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                tableHtml += `
+                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body"></div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </td>
-                                        `;
-                                } else {
-                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
-                                }
+                                        </div>
+                                    </td>
+                                    `;
                             } else {
-                                tableHtml += `<td> </td>`;
+                                tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
                             }
+                        } else {
+                            tableHtml += `<td> </td>`;
                         }
-                        tableHtml += '</tr>';
+                    }
+                    tableHtml += '</tr>';
+                }
+
+                // Add editable attribute to each cell
+                tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+
+                // Append table name
+                tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                $('.table-name').html(tableNameHtml);
+
+                // Append Save Changes button
+                saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                $('.save-button').html(saveHtml);
+
+                // Append Refresh Changes button
+                refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                $('.refresh-button').html(refreshHtml);
+
+                // Update the table details placeholder and show it
+                $('.table-details').html(tableHtml).show();
+
+                // Hide the tile container
+                $('.tile-container').hide();
+
+                // Generate dropdown slicers for each column
+                const slicerContainer = document.getElementById("slicer-container");
+
+                for (const columnName of columnOrder) {
+                    // if (columnName in (""))
+                    const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
+                    
+                    const dropdown = document.createElement("select");
+                    dropdown.setAttribute("data-col-name", columnName);
+                    
+                    const defaultOption = document.createElement("option");
+                    defaultOption.value = "";
+                    defaultOption.text = `Filter ${columnName}`;
+                    dropdown.appendChild(defaultOption);
+                    
+                    for (const value of uniqueValues) {
+                        const option = document.createElement("option");
+                        option.value = value;
+                        option.text = value;
+                        dropdown.appendChild(option);
                     }
 
-                    // Add editable attribute to each cell
-                    tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+                    dropdown.addEventListener("change", updateTable);
+                    slicerContainer.appendChild(dropdown);
+                }
+            });
+        }
 
-                    // Append table name
-                    tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
-                    $('.table-name').html(tableNameHtml);
+        // FUNCTIONS FOR SLICER
+        function updateTable() {
+            const filters = {};
 
-                    // Append Save Changes button
-                    saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
-                    $('.save-button').html(saveHtml);
+            // Get selected filter values
+            const dropdowns = slicerContainer.querySelectorAll("select");
+            dropdowns.forEach(dropdown => {
+                const columnName = dropdown.getAttribute("data-col-name");
+                const selectedValue = dropdown.value;
+                if (selectedValue !== "") {
+                    filters[columnName] = selectedValue;
+                }
+            });
 
-                    // Append Refresh Changes button
-                    refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
-                    $('.refresh-button').html(refreshHtml);
+            // Apply filters and update the displayed table
+            const filteredData = applyFilters(tableData, filters);
+            renderContent(filteredData);
+        }
 
-                    // Update the table details placeholder and show it
-                    $('.table-details').html(tableHtml).show();
+        function applyFilters(data, filters) {
+            return data.filter(row => {
+                for (const columnName in filters) {
+                    if (row[columnName] !== filters[columnName]) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        }
 
-                    // Hide the tile container
-                    $('.tile-container').hide();
-                });
+        // Function specifically for MergerMarket table
+        function updateMergerMarket() {
+            const editedCell = $('.table td.editing'); // Get the edited cell
+            const tableName = "MergerMarket";
+
+            if (editedCell.length === 0) {
+                const editedModal = $('div.editing');
+                if (editedModal.length === 0) {
+                    alert("No cell is being edited.");
+                    return; 
+                }
             }
 
+            const opportunityId = editedCell.closest('tr').find('td:nth-child(1)').text(); // 16th column is Opportunity_ID
+            const columnName = editedCell.data('col-name');
+            const cellValue = editedCell.text();
 
-            // Function specifically for Rolling Shortlist table
-            function updateRollingShortlist() {
-                const editedCell = $('.table td.editing'); // Get the edited cell
-                const tableName = "Rolling Shortlist";
+            console.log(opportunityId);
+            console.log(columnName);
+            console.log(cellValue);
 
-                if (editedCell.length === 0) {
-                    const editedModal = $('div.editing');
-                    if (editedModal.length === 0) {
-                        alert("No cell is being edited.");
-                        return; 
-                    }
-                }
-
-                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
-                const columnName = editedCell.data('col-name');
-                const cellValue = editedCell.text();
-
-                console.log(Num);
-                console.log(columnName);
-                console.log(cellValue);
-
-                const updatedRow = {
-                    row_id: Num,
-                    column_name: columnName,
-                    edited_value: cellValue
-                };
-
-                // Send the updated data to the backend
-                $.ajax({
-                    url: `http://127.0.0.1:5003/update_rollingshortlist`,
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify([updatedRow]),
-                    success: function(response) {
-                        console.log(response);
-                        if (response.success) {
-                            console.log("edit successful!");
-                            alert("Edit successful!");
-                            displayRollingShortlist(); // Reload the table after successful update
-                        } else {
-                            displayErrorMessage("An error occurred while saving changes.");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(error);
-                        displayErrorMessage("An error occurred while saving changes.");
-                    }
-                });
+            const updatedRow = {
+                row_id: opportunityId,
+                column_name: columnName,
+                edited_value: cellValue
             };
 
-            $('.tile').click(function() {
-                const tableName = $(this).find('.tile-title').text();
-
-                if (tableName === "MergerMarket") {
-                    displayMergerMarket();
-                } else if (tableName === "Market Scan") {
-                    displayMarketScan();
-                } else {
-                    displayRollingShortlist()
+            // Send the updated data to the backend
+            $.ajax({
+                url: `http://127.0.0.1:5003/update_mergermarket`,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify([updatedRow]),
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        console.log("edit successful!");
+                        alert("Edit successful!");
+                        displayMergerMarket(); // Reload the table after successful update
+                    } else {
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    displayErrorMessage("An error occurred while saving changes.");
                 }
             });
+        }
 
-            $(document).on('click', '#save-changes', function() {
-                const tableName = $('.table-name').text();
-                if (tableName === "MergerMarket") {
-                    updateMergerMarket();
-                } else if (tableName === "Market Scan") {
-                    updateMarketScan();
-                } else {
-                    updateRollingShortlist();
+        function displayErrorMessage(message) {
+            // Display error message to the user, e.g., using a modal or a notification
+            console.log(message);
+        }
+
+        // To display Market Scan table
+        function displayMarketScan() {
+            $.get(`http://127.0.0.1:5003/get_marketscan`, function(data) {
+                tableName = "Market Scan"
+
+                const columnOrder = [
+                    "Num",
+                    "Picks",
+                    "Captured in the week",
+                    "Date",
+                    "Lead type",
+                    "Target HS industry classification",
+                    "Dominant sector_as per MM",
+                    "Sectors_as per MM",
+                    "Sub Sectors_as per MM",
+                    "HS Target region",
+                    "Dominant country",
+                    "Countries",
+                    "Next Steps",
+                    "Target",
+                    "Target_Chinese",
+                    "Deal intelligence",
+                    "Short BD",
+                    "Bidders",
+                    "Sellers_or_Vendors",
+                    "Type of transaction",
+                    "Intelligence type_as per MM",
+                    "Topics_as per MM",
+                    "Value_USDm",
+                    "Value description",
+                    "Intelligence size",
+                    "Intelligence size bucket",
+                    "Stake value_percent",
+                    "Held by ASPAC priority firm_Y_or_N",
+                    "PE priority firm ",
+                    "Held since",
+                    "Held for more than three years_Y_N_NA",
+                    "KPMG credentials_PE_Company_Both_N",
+                    "KPMG firm",
+                    "Engagement partner",
+                ];
+
+                const tableData = data; // Already parsed JSON
+
+                // Generate a table HTML using the fetched data
+                let tableHtml = '<table class="table">';
+                    
+                // Generate table headers
+                tableHtml += '<thead><tr>';
+                for (const columnName of columnOrder) {
+                    tableHtml += `<th>${columnName}</th>`;
                 }
+                tableHtml += '</tr></thead>';
                 
+                // Generate table rows
+                tableHtml += '<tbody>';
+                for (const opportunityId in tableData) {
+                    const row = tableData[opportunityId];
+                    tableHtml += '<tr>';
+                    for (const columnName of columnOrder) {
+                        const cellContent = row[columnName];
+                        if (cellContent !== null) {
+                            if (cellContent.length > 30) {
+                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                tableHtml += `
+                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body"></div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    `;
+                            } else {
+                                tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                            }
+                        } else {
+                            tableHtml += `<td> </td>`;
+                        }
+                    }
+                    tableHtml += '</tr>';
+                }
+
+                // Add editable attribute to each cell
+                tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
+
+                // Append table name
+                tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                $('.table-name').html(tableNameHtml);
+
+                // Append Save Changes button
+                saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                $('.save-button').html(saveHtml);
+
+                // Append Refresh Changes button
+                refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                $('.refresh-button').html(refreshHtml);
+
+                // Update the table details placeholder and show it
+                $('.table-details').html(tableHtml).show();
+
+                // Hide the tile container
+                $('.tile-container').hide();
             });
-            
-            $(document).on('click', '.expand-button', function() {
-                const modalId = $(this).data('bs-target'); // Get the modal's target ID
-                const cellContent = $(this).closest('td').data('full-content');
+        }
+
+
+        // Function specifically for Market Scan table
+        function updateMarketScan() {
+            const editedCell = $('.table td.editing'); // Get the edited cell
+            const tableName = "Market Scan";
+
+            if (editedCell.length === 0) {
+                const editedModal = $('div.editing');
+                if (editedModal.length === 0) {
+                    alert("No cell is being edited.");
+                    return; 
+                }
+            }
+
+            const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
+            const columnName = editedCell.data('col-name');
+            const cellValue = editedCell.text();
+
+            console.log(Num);
+            console.log(columnName);
+            console.log(cellValue);
+
+            const updatedRow = {
+                row_id: Num,
+                column_name: columnName,
+                edited_value: cellValue
+            };
+
+            // Send the updated data to the backend
+            $.ajax({
+                url: `http://127.0.0.1:5003/update_marketscan`,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify([updatedRow]),
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        console.log("edit successful!");
+                        alert("Edit successful!");
+                        displayMarketScan(); // Reload the table after successful update
+                    } else {
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    displayErrorMessage("An error occurred while saving changes.");
+                }
+            });
+        };
+
+
+        function displayRollingShortlist() {
+            $.get(`http://127.0.0.1:5003/get_rollingshortlist`, function(data) {
+                tableName = "Rolling Shortlist"
+
+                const columnOrder = [
+                "Num",
+                "Captured date",
+                "BP comments",
+                "Partner_or_Director",
+                "Target country",
+                "Sub sector",
+                "Source",
+                " Target",
+                "Business Description",
+                "Financials",
+                "Revenue_USD_M",
+                "EBITDA_USD_M",
+                "Valuation_USD_M",
+                "Other Info",
+                "Deal Intelligence info",
+                "News Date",
+                "KPMG View - Redacted",
+                "Credentials",
+                "HS contact",
+                "Investment date",
+                "Geographic region",
+                "Asset pack ",
+                "Target Region",
+                "Shareholders",
+                "Lead type",
+                "Target HS industry classification ",
+                "Stake for sale_percent",
+                "Value_USD_M",
+                "Value description ",
+                "Website",
+                ];
+
+                const tableData = data; // Already parsed JSON
+
+                // Generate a table HTML using the fetched data
+                let tableHtml = '<table class="table">';
+                    
+                // Generate table headers
+                tableHtml += '<thead><tr>';
+                for (const columnName of columnOrder) {
+                    tableHtml += `
+                        <th>${columnName}</th>
+                    `;
+                    
+                }
+                tableHtml += '</tr></thead>';
+
+                tableHtml += '<thead><tr>';
+                for (const columnName of columnOrder) {
+                    tableHtml += `
+                        <th><input type="text" class="column-search" data-col-name="${columnName}" placeholder="Search ${columnName}"></th>
+                    `;
+                    
+                }
+                tableHtml += '</tr></thead>';
                 
-                // Find the modal using its unique ID and show it
-                $(modalId).find('.modal-body').html(`<div contenteditable="true">${cellContent}</div>`);
-                console.log(modalId)
-                console.log(cellContent)
-                $(modalId).modal('show');
-            });
+                // Generate table rows
+                tableHtml += '<tbody>';
+                for (const opportunityId in tableData) {
+                    const row = tableData[opportunityId];
+                    tableHtml += '<tr>';
+                    for (const columnName of columnOrder) {
+                        const cellContent = row[columnName];
+                        if (cellContent !== null) {
+                            if (cellContent.length > 30) {
+                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                tableHtml += `
+                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body"></div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    `;
+                            } else {
+                                tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                            }
+                        } else {
+                            tableHtml += `<td> </td>`;
+                        }
+                    }
+                    tableHtml += '</tr>';
+                }
 
-            $(document).on('focus', '.table td[contenteditable="true"]', function() {
-                console.log("This cell is being edited!");
-                $(this).addClass('editing');
-            });
+                // Add editable attribute to each cell
+                tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
 
-            $(document).on('focus', 'div[contenteditable="true"]', function() {
-                console.log("This cell is being edited!");
-                $(this).addClass('editing');
+                // Append table name
+                tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                $('.table-name').html(tableNameHtml);
+
+                // Append Save Changes button
+                saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                $('.save-button').html(saveHtml);
+
+                // Append Refresh Changes button
+                refreshHtml = '<button class="btn btn-success" onClick="window.location.reload();">Go Back</button>';
+                $('.refresh-button').html(refreshHtml);
+
+                // Update the table details placeholder and show it
+                $('.table-details').html(tableHtml).show();
+
+                // Hide the tile container
+                $('.tile-container').hide();
+
+                // Generate dropdown slicers for each column
+                const slicerContainer = document.getElementById("slicer-container");
+
+                slicerHTML = `
+                <div class="container">
+                    <div class="row">
+                `;
+
+                
+
+                for (const columnName of columnOrder) {
+                    if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type"].includes(columnName)) {
+                        console.log(`${columnName}, in list`);
+                        const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
+
+                        slicerHTML += `
+                        <div class="col-md-3">
+                            <div class="slicer-container">
+                                <div class="slicer">
+                                    <div class="slicer-header">${columnName}</div>
+                                    <div class="slicer-options">
+                        `
+
+                        for (const value of uniqueValues) {
+                            slicerHTML += `
+                                <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
+                            `
+                        }
+
+                        slicerHTML += `
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                    }
+                }
+
+                slicerHTML += `
+                <div class="col-md-3">
+                    <div class="slicer-container">
+                        <div class="slicer">
+                            <div class="slicer-header">Credentials</div>
+                            <div class="slicer-options">
+                            <label><input type="checkbox" value="Yes">Yes</label>
+                            <label><input type="checkbox" value="Yes - DA / broader credentials. Ben to check.">Yes - DA / broader credentials. Ben to check.</label>
+                            <label><input type="checkbox" value="No">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `
+
+                slicerHTML += `
+                    </div>
+                </div>
+                `
+
+                slicerContainer.innerHTML = slicerHTML;
+
+                function applyColumnSearch() {
+                    $('.column-search').on('input', function () {
+                        // Get all search values from all search inputs
+                        const searchValues = {};
+                        $('.column-search').each(function () {
+                            const columnName = $(this).data('col-name');
+                            const searchText = $(this).val().toLowerCase();
+                            searchValues[columnName] = searchText;
+                        });
+
+                        $('.table tbody tr').each(function () {
+                            let rowVisible = true;
+                            const $row = $(this);
+
+                            // Check if any search text matches in any of the columns
+                            for (const columnName of columnOrder) {
+                                const cellText = $row.find(`td[data-col-name="${columnName}"]`).text().toLowerCase();
+                                const searchText = searchValues[columnName];
+                                if (searchText && !cellText.includes(searchText)) {
+                                    rowVisible = false;
+                                    break;
+                                }
+                            }
+
+                            // Toggle row visibility
+                            if (rowVisible) {
+                                $row.show();
+                            } else {
+                                $row.hide();
+                            }
+                        });
+                    });
+                }
+
+                function applySlicerFiltering() {
+                    $('.slicer-container').on('input', 'input[type="checkbox"]', function () {
+                        // Get all selected slicer values and their corresponding column names
+                        const selectedSlicerValues = {};
+                        $('.slicer-container').each(function () {
+                            const slicerHeading = $(this).find('.slicer-header').text().trim();
+                            const selectedValues = [];
+                            $(this).find('input[type="checkbox"]:checked').each(function () {
+                                selectedValues.push($(this).val());
+                            });
+                            if (selectedValues.length > 0) {
+                                selectedSlicerValues[slicerHeading] = selectedValues;
+                                console.log(slicerHeading + ": " + selectedValues);
+                            }
+                        });
+
+                        // Hide or show table rows based on selected slicer values
+                        $('.table tbody tr').each(function () {
+                            let rowVisible = true;
+                            const $row = $(this);
+
+                            // Check if all selected slicer values match in their respective columns
+                            for (const slicerHeading in selectedSlicerValues) {
+                                const columnIndex = columnOrder.indexOf(slicerHeading);
+
+                                if (columnIndex !== -1) {
+                                    const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
+                                    const selectedValues = selectedSlicerValues[slicerHeading];
+                                    let matchesAllValues = true;
+
+                                    for (const value of selectedValues) {
+                                        if (!cellText.includes(value.toLowerCase())) {
+                                            matchesAllValues = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!matchesAllValues) {
+                                        rowVisible = false;
+                                        break; // No need to check further
+                                    }
+                                }
+                            }
+
+                            // Toggle row visibility
+                            if (rowVisible) {
+                                $row.show();
+                            } else {
+                                $row.hide();
+                            }
+                        });
+                    });
+                }
+
+                applyColumnSearch();
+                applySlicerFiltering();
             });
+        }
+
+
+        // Function specifically for Rolling Shortlist table
+        function updateRollingShortlist() {
+            const editedCell = $('.table td.editing'); // Get the edited cell
+            const tableName = "Rolling Shortlist";
+
+            if (editedCell.length === 0) {
+                const editedModal = $('div.editing');
+                if (editedModal.length === 0) {
+                    alert("No cell is being edited.");
+                    return; 
+                }
+            }
+
+            const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
+            const columnName = editedCell.data('col-name');
+            const cellValue = editedCell.text();
+
+            console.log(Num);
+            console.log(columnName);
+            console.log(cellValue);
+
+            const updatedRow = {
+                row_id: Num,
+                column_name: columnName,
+                edited_value: cellValue
+            };
+
+            // Send the updated data to the backend
+            $.ajax({
+                url: `http://127.0.0.1:5003/update_rollingshortlist`,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify([updatedRow]),
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        console.log("edit successful!");
+                        alert("Edit successful!");
+                        displayRollingShortlist(); // Reload the table after successful update
+                    } else {
+                        displayErrorMessage("An error occurred while saving changes.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    displayErrorMessage("An error occurred while saving changes.");
+                }
+            });
+        };
+
+        $('.tile').click(function() {
+            const tableName = $(this).find('.tile-title').text();
+
+            if (tableName === "MergerMarket") {
+                displayMergerMarket();
+            } else if (tableName === "Market Scan") {
+                displayMarketScan();
+            } else {
+                displayRollingShortlist()
+            }
         });
 
+        $(document).on('click', '#save-changes', function() {
+            const tableName = $('.table-name').text();
+            if (tableName === "MergerMarket") {
+                updateMergerMarket();
+            } else if (tableName === "Market Scan") {
+                updateMarketScan();
+            } else {
+                updateRollingShortlist();
+            }
+            
+        });
+        
+        $(document).on('click', '.expand-button', function() {
+            const modalId = $(this).data('bs-target'); // Get the modal's target ID
+            const cellContent = $(this).closest('td').data('full-content');
+            
+            // Find the modal using its unique ID and show it
+            $(modalId).find('.modal-body').html(`<div contenteditable="true">${cellContent}</div>`);
+            console.log(modalId)
+            console.log(cellContent)
+            $(modalId).modal('show');
+        });
 
-    </script>
+        $(document).on('focus', '.table td[contenteditable="true"]', function() {
+            console.log("This cell is being edited!");
+            $(this).addClass('editing');
+        });
+
+        $(document).on('focus', 'div[contenteditable="true"]', function() {
+            console.log("This cell is being edited!");
+            $(this).addClass('editing');
+        });
+    });
+</script>
 </body>
 </html>

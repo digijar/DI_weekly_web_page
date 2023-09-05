@@ -17,7 +17,37 @@
     ></script>
     <style>
     /* Your CSS styling here */
-    
+    .slicer-container {
+        max-height: 150px;
+        width: 200px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow: auto; /* Enable vertical scrollbar when content overflows */
+    }
+
+    .slicer {
+        margin-bottom: 10px;
+        padding: 5px;
+        border-radius: 5px;
+    }
+
+    .slicer-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .slicer-options label {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    /* Style checkboxes to make them more visible */
+    .slicer-options input[type="checkbox"] {
+        margin-right: 5px;
+    }
+    .slicer-options {
+        white-space: nowrap; /* Prevent line breaks */
+    }
     </style>
 </head>
 <body>
@@ -55,6 +85,59 @@
     </div>
     <div id="content">
         <!-- Content to be filtered will be displayed here -->
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- First slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 1</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option 1">Option 1</label>
+                        <label><input type="checkbox" value="Option 2">Option 2</label>
+                        <label><input type="checkbox" value="Option 3">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- Second slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 2</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option A">Option 111111111111111111</label>
+                        <label><input type="checkbox" value="Option B">Option 2</label>
+                        <label><input type="checkbox" value="Option C">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- Third slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 3</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option 1">Option 1</label>
+                        <label><input type="checkbox" value="Option 2">Option 2</label>
+                        <label><input type="checkbox" value="Option 3">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
