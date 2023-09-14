@@ -83,26 +83,25 @@ async def upload(file: List[UploadFile], tableIdInput: Annotated[str, Form()]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f'Error uploading file: {str(e)}')
 
-
-
 @app.get("/model_testing", response_class=HTMLResponse)
 def model_testing(request: Request):
     return templates.TemplateResponse("model_testing.html", {"request":request})
 
-
-@app.get("/view_table", response_class=HTMLResponse)
-def model_testing(request: Request):
-    return templates.TemplateResponse("view_table.html", {"request":request})
-
-# not working yet, try again later
 @app.get("/preview", response_class=HTMLResponse)
 def preview(request: Request):
     return templates.TemplateResponse("preview.html", {"request":request})
 
+@app.get("/mergermarket", response_class=HTMLResponse)
+def view_mergermarket(request: Request):
+    return templates.TemplateResponse("mergermarket.html", {"request":request})
 
-@app.get('/slicer', response_class=HTMLResponse)
-def slicer(request: Request):
-    return templates.TemplateResponse("slicer.html", {"request":request})
+@app.get("/marketscan", response_class=HTMLResponse)
+def view_marketscan(request: Request):
+    return templates.TemplateResponse("marketscan.html", {"request":request})
+
+@app.get("/rollingshortlist", response_class=HTMLResponse)
+def view_rollingshortlist(request: Request):
+    return templates.TemplateResponse("rollingshortlist.html", {"request":request})
 
 
 if __name__ == '__main__':
