@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Testing</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        /* Add some basic styles for the table */
+        
+        table.preview-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table.preview-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        table.preview-table tr.alternate-row {
+            background-color: #f2f2f2;
+        }
+
+        .navbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .navbar-nav {
+            margin-right: auto;
+        }
+    </style>
+
+    <!-- jQuery cdn -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <!-- <a class="navbar-brand" href="#">Excel File Upload to BigQuery</a> -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Upload</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/view_table">View Table</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/preview">Preview Tables</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/slicer">Excel Slicer</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <h1>Classification and Summarization Model Testing</h1>
+    
+    <table class="preview-table">
+        <tbody>
+            <tr>
+                <th class="col-md-3"></th>
+                <th class="col-md-3">
+                    <label for="opportunityIdInput">Opportunity ID:</label>
+                    <input type="text" id="opportunityIdInput" name="opportunityId" required>
+                </th>
+                    
+                <th class="col-md-3">
+                    <button type="button" class="btn btn-primary" onclick="return_opportunity()">Check BigQuery</button>
+                </th>
+                <th class="col-md-3"></th>
+            </tr>
+
+            <tr>
+                <th class="col-md-3"><p id="opportunityId_output"> </p></th>
+                
+            </tr>
+
+            <tr>
+                <th class="col-md-2"></th>
+                <th class="col-md-4">
+                    <label for="classificationOutput">Classification Output:</label>
+                    <br>
+                    <textarea rows="5" cols="60" id="classificationOutput" name="classificationOutput" placeholder="Output will be displayed here"></textarea>
+                </th>
+                <th class="col-md-4">
+                    <button type="button" class="btn btn-primary" onclick="get_classification_result()">Run Model</button>
+                </th>
+                <th class="col-md-2"></th>
+            </tr>
+            
+            <tr>
+                <th class="col-md-2"></th>
+                <th class="col-md-4">
+                    <label for="summarizationOutput">Summarization Output:</label>
+                    <br>
+                    <textarea rows="5" cols="60" id="summarizationOutput" name="summarizationOutput" placeholder="Output will be displayed here"></textarea>
+                </th>
+                <th class="col-md-4">
+                    <button type="button" class="btn btn-primary" onclick="get_summarization_result()">Run Model</button>
+                </th>
+                <th class="col-md-2"></th>
+            </tr>
+
+        </tbody>
+    </table>
+    
+    <button type="button" class="btn btn-success mt-5 m-auto d-flex justify-content-center">Clear Results</button>
+
+    <!-- Add any JavaScript links or scripts here -->
+    <script>
+
+        // this function returns opportunity text when given opportunity id from input
+        // ensure model.py is started first so port 5001 can be used 
+
+        function return_opportunity(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+                var serviceURL = "http://127.0.0.1:5001/opportunity/" + opportunity_id;
+                console.log(serviceURL);
+
+                const response = await fetch(serviceURL, {
+                    method: "GET",
+                });
+
+                try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        console.log(result.opportunity)
+                        document.getElementById("opportunityId_output").innerHTML = "Opportunity ID exists! :)";
+                    }
+                }catch{
+                    document.getElementById("opportunityId_output").innerHTML = "Invalid Opportunity ID";
+                }
+            })
+        };
+
+        function get_classification_result(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+
+                // serviceurl from main.py
+                    var serviceURL = "http://127.0.0.1:5001/classification/" + opportunity_id;
+                    console.log(serviceURL)
+
+                    const response = await fetch(serviceURL, {
+                    method: "GET",
+                    });
+
+                    try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        if (response.status === 200){
+                            console.log(result);
+                            document.getElementById("classificationOutput").innerHTML = result;
+                        }
+                    }
+                    }catch{
+                    console.log('error');
+                    }
+            })
+
+            if (opportunity_id != ""){
+                console.log("ok!")
+            }
+        };
+
+
+        function get_summarization_result(){
+            var opportunity_id = document.getElementById("opportunityIdInput").value;
+            console.log(opportunity_id)
+
+            $(async () => {
+
+                // serviceurl from main.py
+                var serviceURL = "http://127.0.0.1:5001/summarization/" + opportunity_id;
+                console.log(serviceURL)
+
+                const response = await fetch(serviceURL, {
+                    method: "GET",
+                });
+
+                try{
+                    const result = await response.json();
+
+                    if (response.ok){
+                        if (response.status === 200){
+                            console.log(result);
+                            document.getElementById("summarizationOutput").innerHTML = result;
+                        }
+                    }
+                }catch{
+                    console.log('error');
+                }
+            })
+
+            if (opportunity_id != ""){
+                console.log("ok!");
+            }   
+        }
+
+
+        
+    </script>
+
+
+    <!-- Add the SheetJS library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <!-- Add Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>

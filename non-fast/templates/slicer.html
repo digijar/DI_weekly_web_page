@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel-Like Slicer</title>
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9"
+    crossorigin="anonymous"
+    />
+    <script
+    src="https://code.jquery.com/jquery-3.7.0.js"
+    integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM="
+    crossorigin="anonymous"
+    ></script>
+    <style>
+    /* Your CSS styling here */
+    .slicer-container {
+        max-height: 150px;
+        width: 200px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow: auto; /* Enable vertical scrollbar when content overflows */
+    }
+
+    .slicer {
+        margin-bottom: 10px;
+        padding: 5px;
+        border-radius: 5px;
+    }
+
+    .slicer-header {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .slicer-options label {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    /* Style checkboxes to make them more visible */
+    .slicer-options input[type="checkbox"] {
+        margin-right: 5px;
+    }
+    .slicer-options {
+        white-space: nowrap; /* Prevent line breaks */
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <!-- <a class="navbar-brand" href="#">Excel File Upload to BigQuery</a> -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Upload</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/view_table">View Table</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/preview">Preview Tables</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/slicer">Excel Slicer</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="slicer">
+        <!-- Slicer options/buttons will be generated here -->
+    </div>
+    <div id="content">
+        <!-- Content to be filtered will be displayed here -->
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- First slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 1</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option 1">Option 1</label>
+                        <label><input type="checkbox" value="Option 2">Option 2</label>
+                        <label><input type="checkbox" value="Option 3">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- Second slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 2</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option A">Option 111111111111111111</label>
+                        <label><input type="checkbox" value="Option B">Option 2</label>
+                        <label><input type="checkbox" value="Option C">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="slicer-container">
+                    <!-- Third slicer container code here -->
+                    <div class="slicer">
+                        <div class="slicer-header">Column 3</div>
+                        <div class="slicer-options">
+                        <label><input type="checkbox" value="Option 1">Option 1</label>
+                        <label><input type="checkbox" value="Option 2">Option 2</label>
+                        <label><input type="checkbox" value="Option 3">Option 3</label>
+                        <label><input type="checkbox" value="Option 3">Option 4</label>
+                        <label><input type="checkbox" value="Option 3">Option 5</label>
+                        <!-- Add more options as needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = [
+        { name: "Item 1", category: "Category A" },
+        { name: "Item 2", category: "Category B" },
+        // Add more data
+        ];
+
+        const slicerContainer = document.getElementById("slicer");
+        const contentContainer = document.getElementById("content");
+
+        // Generate slicer options based on unique categories
+        const categories = [...new Set(data.map(item => item.category))];
+        categories.forEach(category => {
+        const option = document.createElement("button");
+        option.textContent = category;
+        option.addEventListener("click", () => filterContent(category));
+        slicerContainer.appendChild(option);
+        });
+
+        // Initial content rendering
+        renderContent(data);
+
+        function filterContent(selectedCategory) {
+        const filteredData = data.filter(item => item.category === selectedCategory);
+        renderContent(filteredData);
+        }
+
+        function renderContent(items) {
+        contentContainer.innerHTML = "";
+        items.forEach(item => {
+            const itemElement = document.createElement("div");
+            itemElement.textContent = item.name;
+            contentContainer.appendChild(itemElement);
+        });
+        }
+    </script>
+
+    <!-- Add the SheetJS library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <!-- Add Bootstrap JS -->
+    <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+    crossorigin="anonymous"
+    ></script>
+</body>
+</html>

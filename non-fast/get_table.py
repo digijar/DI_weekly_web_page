@@ -1,25 +1,23 @@
+from flask import Flask, render_template
 import os
 from google.cloud import bigquery
 import json
+from flask_cors import CORS
+import pandas as pd
 
-from fastapi import FastAPI
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-import uvicorn
-import time
+app = Flask(__name__)
 
-app = FastAPI()
+CORS(app)
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'testing-bigquery-vertexai-service-account.json'
 client = bigquery.Client()
 
-@app.get("/")
-async def root():
-    return {"message": "Testing"}
-
-@app.get("/get_table")
+@app.route('/get_table', methods=["GET"])
 def get_table():
-    sql_query = """SELECT table_name from `testing-bigquery-vertexai.MergerMarket`.INFORMATION_SCHEMA.TABLES"""
+
+    sql_query = """
+    SELECT table_name from `testing-bigquery-vertexai.MergerMarket`.INFORMATION_SCHEMA.TABLES    
+    """
 
     query_job = client.query(sql_query)
 
@@ -30,18 +28,16 @@ def get_table():
 
         table_dict['table' + str(count)] = row[0]
         count += 1
-
-    json_compatible_table_data = jsonable_encoder(table_dict)
-    print(json_compatible_table_data)
-    return json_compatible_table_data
-
-@app.get("/get_table/{table_name}")
-def get_table_data(table_name: str):
-    startTime = time.time()
-
-    job = """SELECT * FROM `testing-bigquery-vertexai.MergerMarket.{table_name}`ORDER BY Opportunity_id;""".format(table_name = table_name)
-    print(job)
     
+    return json.dumps(table_dict)
+
+@app.route('/get_table/<string:table_name>', methods=["GET"])
+def get_table_data(table_name):
+    job = """
+    SELECT * FROM `testing-bigquery-vertexai.templates.{table_name}`
+    ORDER BY Opportunity_id;
+    """.format(table_name = table_name)
+
     result = client.query(job)
 
     return_json = {}
@@ -83,16 +79,11 @@ def get_table_data(table_name: str):
         row_dict["Opportunity_ID"] = row["Opportunity_ID"]
 
         opportunity_id = int(row["Opportunity_ID"])
-        json_compatible_item_data = jsonable_encoder(row_dict)
-        return_json[opportunity_id] = json_compatible_item_data
-        return_json_compatible_data = jsonable_encoder(return_json) 
-
-    endTime = time.time()
-    elapsedTime = endTime - startTime
-    print(elapsedTime)
-
-    return JSONResponse(content=return_json_compatible_data)
+        return_json[opportunity_id] = row_dict
+        
+    # return json.dumps(return_json)
+    return return_json
 
 
-if __name__ == "__main__":
-    uvicorn.run("get_table_fastapi:app", port=8002, reload=True)
+if __name__ == '__main__':
+    app.run(debug=True, port=5002)

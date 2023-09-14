@@ -1,50 +1,79 @@
-from flask import Flask, render_template, request
+from fastapi import Body, FastAPI, File, UploadFile, Form, HTTPException, Request
 import os
-# Importing necessary libraries for handling Excel and BigQuery
 import pandas as pd
 from google.cloud import bigquery
-from flask_cors import CORS
-
-# Replace 'your-project-id' with your actual Google Cloud Project ID
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-load_dotenv('gcloud.env')
-PROJECT_ID = os.getenv('PROJECT_ID')
-DATASET_ID = os.getenv('DATASET_ID')
+import uvicorn
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import re
+from pydantic import BaseModel
+from typing import List
+from typing_extensions import Annotated
+from json import JSONDecodeError
+import json
 
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app = Flask(__name__)
-CORS(app)
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Configure templates directory
+templates = Jinja2Templates(directory="templates")
 
-@app.route('/upload', methods=['POST'])
-def upload():
+@app.get('/', response_class=HTMLResponse)
+async def index(request: Request):
+    # Render the index.html template
+    return templates.TemplateResponse("index.html" , {"request":request})
+
+# Function to clean column names
+def clean_column_name(column_name, existing_names):
+    # Remove any characters that are not allowed in BigQuery column names
+    cleaned_name = re.sub(r"[^a-zA-Z0-9_]+", "_", column_name)
+
+    # Check for duplicates and add a suffix if necessary
+    counter = 2
+    while cleaned_name in existing_names:
+        cleaned_name = f"{column_name}_{counter}"
+        counter += 1
+
+    return cleaned_name
+
+@app.post('/upload')
+async def upload(file: List[UploadFile], tableIdInput: Annotated[str, Form()]):
     try:
-        if 'file' not in request.files:
-            return 'No file part', 400
+        if not file:
+            raise HTTPException(status_code=400, detail='No file selected')
 
-        files = request.files.getlist('file')
-        if len(files) == 0:
-            return 'No file selected', 400
-
-        table_id = request.form.get('tableIdInput')  # Get the user-inputted table ID
-
-        if not table_id:
-            return 'Table ID is required', 400
+        if not tableIdInput:
+            raise HTTPException(status_code=400, detail='Table ID is required')
 
         # Iterate through uploaded files and read data using pandas
-        for file in files:
+        for file_single in file:
+            content = await file_single.read()
+            with pd.io.common.BytesIO(content) as buffer:
+                df = pd.read_excel(buffer, header=0)
 
-            # Convert the file to a binary file
-
-            df = pd.read_excel(file, header=1)
+            # Clean column names using the clean_column_name function
+            existing_column_names = df.columns.tolist()
+            cleaned_column_names = [
+                clean_column_name(column_name, existing_column_names)
+                for column_name in df.columns
+            ]
+            df.columns = cleaned_column_names
 
             # Upload the data to BigQuery
             client = bigquery.Client(project="testing-bigquery-vertexai")
             dataset_id = "web_UI"
-            table_ref = client.dataset(dataset_id).table(table_id)
+            table_ref = client.dataset(dataset_id).table(tableIdInput)
             job_config = bigquery.LoadJobConfig()
             job_config.autodetect = True
             job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
@@ -52,23 +81,29 @@ def upload():
 
         return 'File(s) uploaded successfully!'
     except Exception as e:
-        return f'Error uploading file: {str(e)}', 500
-    
-@app.route('/model_testing')
-def model_testing():
-    return render_template('model_testing.html')
+        raise HTTPException(status_code=500, detail=f'Error uploading file: {str(e)}')
 
-@app.route('/view_table')
-def edit_row():
-    return render_template('view_table.html')
 
-@app.route('/preview')
-def preview():
-    return render_template('preview.html')
 
-@app.route('/slicer')
-def slicer():
-    return render_template('slicer.html')
+@app.get("/model_testing", response_class=HTMLResponse)
+def model_testing(request: Request):
+    return templates.TemplateResponse("model_testing.html", {"request":request})
+
+
+@app.get("/view_table", response_class=HTMLResponse)
+def model_testing(request: Request):
+    return templates.TemplateResponse("view_table.html", {"request":request})
+
+# not working yet, try again later
+@app.get("/preview", response_class=HTMLResponse)
+def preview(request: Request):
+    return templates.TemplateResponse("preview.html", {"request":request})
+
+
+@app.get('/slicer', response_class=HTMLResponse)
+def slicer(request: Request):
+    return templates.TemplateResponse("slicer.html", {"request":request})
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    uvicorn.run("main:app", host='127.0.0.1', port=5000, reload=True)
