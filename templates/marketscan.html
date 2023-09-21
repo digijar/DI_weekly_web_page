@@ -87,7 +87,8 @@
         }
 
         .save-button,
-        .add-row-button {
+        .add-row-button,
+        .populate-RS-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -97,6 +98,39 @@
             border: none;
             display: inline-block;
             cursor: pointer;
+        }
+
+        /* for SLICER CONTAINER */
+        .slicer-container {
+            max-height: 150px;
+            width: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow: auto; /* Enable vertical scrollbar when content overflows */
+        }
+
+        .slicer {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .slicer-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .slicer-options label {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* Style checkboxes to make them more visible */
+        .slicer-options input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .slicer-options {
+            white-space: nowrap; /* Prevent line breaks */
         }
 
         /* Style the column search input boxes */
@@ -167,11 +201,31 @@
 
             <div class="button-container">
                 <div class="table-name"></div>
+                <div class="populate-RS-button"></div>
                 <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Modal for confirmation of populating Market Scan -->
+    <div class="modal fade" id="populateRSModal" tabindex="-2" aria-labelledby="populateRSModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="populateRSModalLabel">Populate Rolling Shortlist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="populateRSModalConfirm">Populate</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Add a modal for adding a new row -->
     <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
@@ -269,6 +323,10 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="slicer-container">
+        <!-- Dropdown slicers will be generated here -->
     </div>
 
     <div class="table-details" style="display: none;">
@@ -414,11 +472,57 @@
                 addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
                 $('.add-row-button').html(addHtml);
 
+                // Append Populate Rolling Shortlist button
+                populateHtml = '<button id="populate-RS" class="btn" style="background-color: #9900ffff; color: white;">Populate RS</button>';
+                $('.populate-RS-button').html(populateHtml);
+
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
 
                 // Hide the tile container
                 $('.tile-container').hide();
+
+                // Generate dropdown slicers for each column
+                const slicerContainer = document.getElementById("slicer-container");
+
+                slicerHTML = `
+                <div class="container">
+                    <div class="row">
+                `;
+
+                for (const columnName of columnOrder) {
+                    if (["Lead type", "Target HS industry classification", "HS Target region", "Dominant country", "Intelligence size bucket", "Type of transaction", "Held by ASPAC priority firm_Y_or_N", "KPMG credentials_PE_Company_Both_N"].includes(columnName)) {
+                        const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
+
+                        slicerHTML += `
+                        <div class="col-md-3">
+                            <div class="slicer-container">
+                                <div class="slicer">
+                                    <div class="slicer-header">${columnName}</div>
+                                    <div class="slicer-options">
+                        `
+
+                        for (const value of uniqueValues) {
+                            slicerHTML += `
+                                <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
+                            `
+                        }
+
+                        slicerHTML += `
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                    }
+                }
+
+                slicerHTML += `
+                    </div>
+                </div>
+                `
+
+                slicerContainer.innerHTML = slicerHTML;
 
                 // For Search Function
                 function applyColumnSearch() {
@@ -455,14 +559,77 @@
                     });
                 }
 
-                applyColumnSearch();
-                console.log("display successful")
+                function applySlicerFiltering() {
+                    $('.slicer-container').on('input', 'input[type="checkbox"]', function () {
+                        // Get all selected slicer values and their corresponding column names
+                        const selectedSlicerValues = {};
+                        $('.slicer-container').each(function () {
+                            const slicerHeading = $(this).find('.slicer-header').text().trim();
+                            const selectedValues = [];
+                            $(this).find('input[type="checkbox"]:checked').each(function () {
+                                selectedValues.push($(this).val());
+                            });
+                            if (selectedValues.length > 0) {
+                                selectedSlicerValues[slicerHeading] = selectedValues;
+                                console.log(slicerHeading + ": " + selectedValues);
+                            }
+                        });
 
-                // Create a "Download Table" button dynamically
+                        // Hide or show table rows based on selected slicer values
+                        $('.table tbody tr').each(function () {
+                            let rowVisible = true;
+                            const $row = $(this);
+
+                            // Check if all selected slicer values match in their respective columns
+                            for (const slicerHeading in selectedSlicerValues) {
+                                const columnIndex = columnOrder.indexOf(slicerHeading);
+
+                                if (columnIndex !== -1) {
+                                    const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
+                                    const selectedValues = selectedSlicerValues[slicerHeading];
+                                    let matchesAllValues = true;
+
+                                    for (const value of selectedValues) {
+                                        if (!cellText.includes(value.toLowerCase())) {
+                                            matchesAllValues = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!matchesAllValues) {
+                                        rowVisible = false;
+                                        break; // No need to check further
+                                    }
+                                }
+                            }
+
+                            // Toggle row visibility
+                            if (rowVisible) {
+                                $row.show();
+                            } else {
+                                $row.hide();
+                            }
+                        });
+                    });
+                }
+
+                applyColumnSearch();
+                applySlicerFiltering();
+                console.log("display successful");
+
+                // Create a button element
                 const downloadButton = document.createElement('button');
-                downloadButton.innerText = 'Download Table';
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn btn-warning';
+
+                // Create an image element for the button
+                const downloadImage = document.createElement('img');
+                downloadImage.src = '../static/images/download_icon.png'; // Set the image source
+                downloadImage.alt = 'Download Table'; // Set alt text for accessibility
+                downloadImage.width = 20; // Set the width
+                downloadImage.height = 20; // Set the height
+
+                downloadButton.appendChild(downloadImage); // Append the image to the button
 
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5003/download_marketscan');
@@ -690,6 +857,41 @@
 
             // Clear the editingCells array
             editingCells.length = 0;
+        });
+
+        // Add an event listener to the "Populate MS" button
+        $('.populate-RS-button').on('click', function() {
+            console.log("populate being pressed");
+            
+            // Calculate the number of rows in the table
+            const numRows = $('#MS_table tbody tr').length;
+
+            // Count the number of "true" values in the "Picks" column
+            const numPicks = $('#MS_table tbody td[data-col-name="Picks"]').filter(function() {
+                return $(this).text().trim() === 'true';
+            }).length;
+
+            // Create the modal content with the updated message
+            const modalContent = `
+                You are currently going to populate Rolling Shortlist with ${numPicks} rows.
+            `;
+
+            // Update the modal body with the content
+            $('.modal-body').html(modalContent);
+
+            // Show the confirmation modal
+            $('#populateRSModal').modal('show');
+        });
+
+        // ... (other code)
+
+        // Add an event listener to the "Populate" button in the confirmation modal
+        $('#populateRSModalConfirm').on('click', function() {
+            // Add logic for populating Rolling Shortlist here
+            // This function will be executed when the "Populate" button is clicked in the modal.
+            
+            // Close the confirmation modal
+            $('#populateRSModal').modal('hide');
         });
     });
 </script>

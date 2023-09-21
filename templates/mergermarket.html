@@ -87,7 +87,8 @@
         }
 
         .save-button,
-        .add-row-button {
+        .add-row-button,
+        .populate-MS-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -167,11 +168,31 @@
 
             <div class="button-container">
                 <div class="table-name"></div>
+                <div class="populate-MS-button"></div>
                 <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Modal for confirmation of populating Market Scan -->
+    <div class="modal fade" id="populateMSModal" tabindex="-2" aria-labelledby="populateMSModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="populateMSModalLabel">Populate Market Scan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="populateMSModalConfirm">Populate</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Add a modal for adding a new row -->
     <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
@@ -400,6 +421,10 @@
                 addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
                 $('.add-row-button').html(addHtml);
 
+                // Append Populate Market Scan button
+                populateHtml = '<button id="populate-MS" class="btn" style="background-color: #9900ffff; color: white;">Populate MS</button>';
+                $('.populate-MS-button').html(populateHtml);
+
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
 
@@ -442,13 +467,21 @@
                 }
 
                 applyColumnSearch();
-                console.log("display successful")
+                console.log("display successful");
 
-                // Create a "Download Table" button dynamically
+                // Create a button element
                 const downloadButton = document.createElement('button');
-                downloadButton.innerText = 'Download Table';
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn btn-warning';
+
+                // Create an image element for the button
+                const downloadImage = document.createElement('img');
+                downloadImage.src = '../static/images/download_icon.png'; // Set the image source
+                downloadImage.alt = 'Download Table'; // Set alt text for accessibility
+                downloadImage.width = 20; // Set the width
+                downloadImage.height = 20; // Set the height
+
+                downloadButton.appendChild(downloadImage); // Append the image to the button
 
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5003/download_mergermarket');
@@ -669,6 +702,39 @@
 
             // Clear the editingCells array
             editingCells.length = 0;
+        });
+
+        // Add an event listener to the "Populate MS" button
+        $('.populate-MS-button').on('click', function() {
+            console.log("populate being pressed");
+            // Calculate the number of rows in the table
+            const numRows = $('#MM_table tbody tr').length;
+
+            // Retrieve the first and last Opportunity_ID values
+            const firstOpportunityId = $('#MM_table tbody tr:first td[data-col-name="Opportunity_ID"]').text();
+            const lastOpportunityId = $('#MM_table tbody tr:last td[data-col-name="Opportunity_ID"]').text();
+
+            // Create the modal content
+            const modalContent = `
+                You are currently going to populate Market Scan with ${numRows} rows, from Opportunity_ID ${firstOpportunityId} to Opportunity_ID ${lastOpportunityId}.
+            `;
+
+            // Update the modal body with the content
+            $('.modal-body').html(modalContent);
+
+            // Show the confirmation modal
+            $('#populateMSModal').modal('show');
+        });
+
+        // ... (other code)
+
+        // Add an event listener to the "Populate" button in the confirmation modal
+        $('#populateMSModalConfirm').on('click', function() {
+            // Add logic for populating Market Scan here
+            // This function will be executed when the "Populate" button is clicked in the modal.
+            
+            // Close the confirmation modal
+            $('#populateMSModal').modal('hide');
         });
     });
 </script>

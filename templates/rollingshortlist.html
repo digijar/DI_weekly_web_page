@@ -87,7 +87,8 @@
         }
 
         .save-button,
-        .add-row-button {
+        .add-row-button,
+        .generate-assetpack-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -201,11 +202,34 @@
 
             <div class="button-container">
                 <div class="table-name"></div>
+                <div class="generate-assetpack-button"></div>
                 <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Modal for generating Asset Pack -->
+    <div class="modal fade" id="generateAPModal" tabindex="-1" aria-labelledby="generateAPModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateAPModalLabel">Generate Asset Pack</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="targetNameInput">Target's name for Asset Pack generation:</label>
+                    <input type="text" id="targetNameInput" class="form-control" placeholder="Enter Target's Name">
+                    <div class="text-danger" id="validationError" style="display: none;">Target is not valid.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="generateAssetPackButton" class="btn btn-primary">Generate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Add a modal for adding a new row -->
     <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
@@ -366,7 +390,7 @@
                 const tableData = data; // Already parsed JSON
 
                 // Generate a table HTML using the fetched data
-                let tableHtml = '<table class="table" id="MS_table">';
+                let tableHtml = '<table class="table" id="RS_table">';
                     
                 // Generate table headers
                 tableHtml += '<thead><tr>';
@@ -442,6 +466,10 @@
                 addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
                 $('.add-row-button').html(addHtml);
 
+                // Append Generate Asset Pack button
+                generateHtml = '<button id="generate-assetpack" class="btn" style="background-color: #9900ffff; color: white;">Generate Asset Pack</button>';
+                $('.generate-assetpack-button').html(generateHtml);
+
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
 
@@ -456,10 +484,8 @@
                     <div class="row">
                 `;
 
-                
-
                 for (const columnName of columnOrder) {
-                    if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type"].includes(columnName)) {
+                    if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type", "Credentials"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
 
                         slicerHTML += `
@@ -484,21 +510,6 @@
                         `
                     }
                 }
-
-                slicerHTML += `
-                <div class="col-md-3">
-                    <div class="slicer-container">
-                        <div class="slicer">
-                            <div class="slicer-header">Credentials</div>
-                            <div class="slicer-options">
-                            <label><input type="checkbox" value="Yes">Yes</label>
-                            <label><input type="checkbox" value="Yes - DA / broader credentials. Ben to check.">Yes - DA / broader credentials. Ben to check.</label>
-                            <label><input type="checkbox" value="No">No</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                `
 
                 slicerHTML += `
                     </div>
@@ -597,13 +608,21 @@
 
                 applyColumnSearch();
                 applySlicerFiltering();
-                console.log("display successful")
+                console.log("display successful");
 
-                // Create a "Download Table" button dynamically
+                // Create a button element
                 const downloadButton = document.createElement('button');
-                downloadButton.innerText = 'Download Table';
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn btn-warning';
+
+                // Create an image element for the button
+                const downloadImage = document.createElement('img');
+                downloadImage.src = '../static/images/download_icon.png'; // Set the image source
+                downloadImage.alt = 'Download Table'; // Set alt text for accessibility
+                downloadImage.width = 20; // Set the width
+                downloadImage.height = 20; // Set the height
+
+                downloadButton.appendChild(downloadImage); // Append the image to the button
 
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5003/download_rollingshortlist');
@@ -827,6 +846,45 @@
             // Clear the editingCells array
             editingCells.length = 0;
         });
+
+        // Add an event listener to the "Generate Asset Pack" button
+        $('.generate-assetpack-button').on('click', function() {
+            // Show the Generate Asset Pack modal
+            $('#generateAPModal').modal('show');
+        });
+
+        // Add an event listener to the "Generate" button in the modal
+        $('#generateAssetPackButton').on('click', function() {
+            // Get the entered target name from the input field
+            const enteredTargetName = $('#targetNameInput').val();
+
+            // Check if the entered target name is valid
+            const isValidTarget = isTargetValid(enteredTargetName);
+
+            if (isValidTarget) {
+                // Valid target name, add your logic for generating Asset Pack here
+                // This function will be executed when the "Generate" button is clicked in the modal.
+                
+                // Close the Generate Asset Pack modal
+                $('#generateAPModal').modal('hide');
+                // Hide validation error message
+                $('#validationError').hide();
+            } else {
+                // Display validation error message
+                $('#validationError').show();
+            }
+        });
+
+        // Function to check if the entered target name is valid
+        function isTargetValid(targetName) {
+            // Iterate through the values in the "Target" column of the table
+            const targetColumnValues = $('#RS_table tbody td[data-col-name=" Target"]').map(function() {
+                return $(this).text().trim();
+            }).get();
+
+            // Check if the entered target name exists in the "Target" column values
+            return targetColumnValues.includes(targetName);
+        }
     });
 </script>
 </body>
