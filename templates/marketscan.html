@@ -73,6 +73,9 @@
             white-space: normal;
             overflow: visible;
         }
+        .table td.expanded {
+            background-color: orange;
+        }
         .table td.editing {
             background-color: orange;
         }
@@ -84,7 +87,7 @@
         }
 
         .save-button,
-        .refresh-button {
+        .add-row-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -164,11 +167,109 @@
 
             <div class="button-container">
                 <div class="table-name"></div>
-                <div class="refresh-button"></div>
+                <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Add a modal for adding a new row -->
+    <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRowModalLabel">Add Row</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <!-- Header columns based on your BigQuery table headers -->
+                                <th>Num</th>
+                                <th>Picks</th>
+                                <th>Captured in the week</th>
+                                <th>Date</th>
+                                <th>Lead type</th>
+                                <th>Target HS industry classification</th>
+                                <th>Dominant sector_as per MM</th>
+                                <th>Sectors_as per MM</th>
+                                <th>Sub Sectors_as per MM</th>
+                                <th>HS Target region</th>
+                                <th>Dominant country</th>
+                                <th>Countries</th>
+                                <th>Next Steps</th>
+                                <th>Target</th>
+                                <th>Target_Chinese</th>
+                                <th>Deal intelligence</th>
+                                <th>Short BD</th>
+                                <th>Bidders</th>
+                                <th>Sellers_or_Vendors</th>
+                                <th>Type of transaction</th>
+                                <th>Intelligence type_as per MM</th>
+                                <th>Topics_as per MM</th>
+                                <th>Value_USDm</th>
+                                <th>Value description</th>
+                                <th>Intelligence size</th>
+                                <th>Intelligence size bucket</th>
+                                <th>Stake value_percent</th>
+                                <th>Held by ASPAC priority firm_Y_or_N</th>
+                                <th>PE priority firm</th>
+                                <th>Held since</th>
+                                <th>Held for more than three years_Y_N_NA</th>
+                                <th>KPMG credentials_PE_Company_Both_N</th>
+                                <th>KPMG firm</th>
+                                <th>Engagement partner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <!-- Input fields for each column -->
+                                <td><input type="number" id="new-num"></td>
+                                <td><input type="checkbox" id="new-picks"></td>
+                                <td><input type="text" id="new-capturedWeek"></td>
+                                <td><input type="date" id="new-date"></td>
+                                <td><input type="text" id="new-leadType"></td>
+                                <td><input type="text" id="new-HSIndustryClassification"></td>
+                                <td><input type="text" id="new-dominantSectorMM"></td>
+                                <td><input type="text" id="new-sectorsMM"></td>
+                                <td><input type="text" id="new-subSectorsMM"></td>
+                                <td><input type="text" id="new-HSTargetRegion"></td>
+                                <td><input type="text" id="new-dominantCountry"></td>
+                                <td><input type="text" id="new-countries"></td>
+                                <td><input type="text" id="new-nextSteps"></td>
+                                <td><input type="text" id="new-target"></td>
+                                <td><input type="text" id="new-targetChinese"></td>
+                                <td><input type="text" id="new-dealIntelligence"></td>
+                                <td><input type="text" id="new-shortBD"></td>
+                                <td><input type="text" id="new-bidders"></td>
+                                <td><input type="text" id="new-sellersVendors"></td>
+                                <td><input type="text" id="new-transactionType"></td>
+                                <td><input type="text" id="new-intelligenceType"></td>
+                                <td><input type="text" id="new-topicsMM"></td>
+                                <td><input type="text" id="new-valueUSDm"></td>
+                                <td><input type="text" id="new-valueDescription"></td>
+                                <td><input type="text" id="new-intelligenceSize"></td>
+                                <td><input type="text" id="new-intelligenceSizeBucket"></td>
+                                <td><input type="text" id="new-stakeValuePercent"></td>
+                                <td><input type="text" id="new-heldByASPAC"></td>
+                                <td><input type="text" id="new-pePriorityFirm"></td>
+                                <td><input type="text" id="new-heldSince"></td>
+                                <td><input type="text" id="new-heldThreeYears"></td>
+                                <td><input type="text" id="new-kpmgCredentials"></td>
+                                <td><input type="text" id="new-kpmgFirm"></td>
+                                <td><input type="text" id="new-engagementPartner"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="addRowConfirmButton">Add Row</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="table-details" style="display: none;">
         <!-- Table Data from BigQuery will be generated here -->
@@ -240,7 +341,7 @@
                 const tableData = data; // Already parsed JSON
 
                 // Generate a table HTML using the fetched data
-                let tableHtml = '<table class="table">';
+                let tableHtml = '<table class="table" id="MS_table">';
                     
                 // Generate table headers
                 tableHtml += '<thead><tr>';
@@ -280,7 +381,7 @@
                                                     </div>
                                                     <div class="modal-body"></div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
                                                         <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                     </div>
                                                 </div>
@@ -292,7 +393,7 @@
                                 tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
                             }
                         } else {
-                            tableHtml += `<td> </td>`;
+                            tableHtml += `<td data-col-name="${columnName}" contenteditable="true"> </td>`;
                         }
                     }
                     tableHtml += '</tr>';
@@ -308,6 +409,10 @@
                 // Append Save Changes button
                 saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
                 $('.save-button').html(saveHtml);
+
+                // Append Add Row button
+                addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
+                $('.add-row-button').html(addHtml);
 
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
@@ -381,22 +486,18 @@
         // Function specifically for Market Scan table
         function updateMarketScan() {
             const editedCells = $('.table td.editing'); // Get all edited cells
+            const editedModal = $('.modal-body.editing'); // Get the edited cell inside the modal
 
-            const tableName = "Market_Scan";
-
-            if (editedCells.length === 0) {
-                const editedModal = $('div.editing');
-                if (editedModal.length === 0) {
-                    alert("No cell is being edited.");
-                    return;
-                }
-            }
+            let showAlert = true; // Initialize the showAlert flag as true
 
             const updatedRows = [];
 
-            editedCells.each(function() {
+            if (editedCells.length > 0) {
+                showAlert = false;
+
+                editedCells.each(function () {
                 const editedCell = $(this);
-                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row id)
+                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row number)
                 const columnName = editedCell.data('col-name');
                 const cellValue = editedCell.text();
 
@@ -404,15 +505,37 @@
                 console.log(columnName);
                 console.log(cellValue);
 
+                    updatedRows.push({
+                        row_id: Num,
+                        column_name: columnName,
+                        edited_value: cellValue
+                    });
+                });
+            }
+
+            if (editedModal.length > 0) {
+                // Get the updated content from the modal and update the corresponding cell
+                const modalId = editedModal.closest('.modal').attr('id'); // Get the modal ID
+                const editedContent = $(`#${modalId} .modal-body`).text(); // Get the content from the modal
+
+                const Num = editedModal.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num
+                const columnName = editedModal.closest('.table td').data('col-name');
+
                 updatedRows.push({
                     row_id: Num,
                     column_name: columnName,
-                    edited_value: cellValue
+                    edited_value: editedContent
                 });
-            });
+
+                showAlert = false; // Modal is edited, so do not show the alert
+            }
 
             console.log(updatedRows);
 
+            if (showAlert) {
+                alert("No cell is being edited.");
+                return;
+            }
 
             // Send the updated data to the backend using fetch
             fetch('http://127.0.0.1:5003/update_marketscan', {
@@ -450,14 +573,97 @@
                 });
         }
 
-        $(document).on('click', '.expand-button', function() {
+        // Click event handler for the "Add Row" button
+        $('.add-row-button').click(function() {
+            $('#addRowModal').modal('show');
+        });
+
+        // Click event handler for the "Add Row" modal's "Add Row" button
+        $('#addRowConfirmButton').click(function() {
+            // Collect data from input fields
+            const newRowData = {
+                Num: parseFloat($('#new-num').val()) || 0, // Use 0 as a default value if not provided
+                Picks: $('#new-picks').is(":checked"), // Use true/false based on checkbox state
+                Captured_in_the_week: $('#new-capturedWeek').val() || " ",
+                Date: parseFloat($('#new-date').val()) || parseFloat(new Date().getTime()), // Use current timestamp if not provided
+                Lead_type: $('#new-leadType').val() || " ",
+                Target_HS_industry_classification: $('#new-HSIndustryClassification').val() || " ",
+                Dominant_sector_as_per_MM: $('#new-dominantSectorMM').val() || " ",
+                Sectors_as_per_MM: $('#new-sectorsMM').val() || " ",
+                Sub_Sectors_as_per_MM: $('#new-subSectorsMM').val() || " ",
+                HS_Target_region: $('#new-HSTargetRegion').val() || " ",
+                Dominant_country: $('#new-dominantCountry').val() || " ",
+                Countries: $('#new-countries').val() || " ",
+                Next_Steps: $('#new-nextSteps').val() || " ",
+                Target: $('#new-target').val() || " ",
+                Target_Chinese: $('#new-targetChinese').val() || " ",
+                Deal_intelligence: $('#new-dealIntelligence').val() || " ",
+                Short_BD: $('#new-shortBD').val() || " ",
+                Bidders: $('#new-bidders').val() || " ",
+                Sellers_or_Vendors: $('#new-sellersVendors').val() || " ",
+                Type_of_transaction: $('#new-transactionType').val() || " ",
+                Intelligence_type_as_per_MM: $('#new-intelligenceType').val() || " ",
+                Topics_as_per_MM: $('#new-topicsMM').val() || " ",
+                Value_USDm: $('#new-valueUSDm').val() || " ",
+                Value_description: $('#new-valueDescription').val() || " ",
+                Intelligence_size: $('#new-intelligenceSize').val() || " ",
+                Intelligence_size_bucket: $('#new-intelligenceSizeBucket').val() || " ",
+                Stake_value_percent: $('#new-stakeValuePercent').val() || " ",
+                Held_by_ASPAC_priority_firm_Y_or_N: $('#new-heldByASPAC').val() || " ",
+                PE_priority_firm: $('#new-pePriorityFirm').val() || " ",
+                Held_since: $('#new-heldSince').val() || " ",
+                Held_for_more_than_three_years_Y_N_NA: $('#new-heldThreeYears').val() || " ",
+                KPMG_credentials_PE_Company_Both_N: $('#new-kpmgCredentials').val() || " ",
+                KPMG_firm: $('#new-kpmgFirm').val() || " ",
+                Engagement_partner: $('#new-engagementPartner').val() || " ",
+                // Add other fields as needed
+            };
+
+            // Send the new row data to the server
+            $.ajax({
+                url: 'http://127.0.0.1:5003/add_marketscan_row',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newRowData),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Row added successfully.');
+                        // Refresh the table after adding the row
+                        setTimeout(function(){
+                            window.location.reload();
+                        }, 8000); // Reload the table after a successful update
+                    } else {
+                        alert('Error adding row.');
+                    }
+                    $('#addRowModal').modal('hide');
+                },
+                error: function() {
+                    alert('Error adding row.');
+                    $('#addRowModal').modal('hide');
+                }
+            });
+        });
+
+        
+        $(document).on('click', '.expand-button', function () {
             const modalId = $(this).data('bs-target'); // Get the modal's target ID
             const cellContent = $(this).closest('td').data('full-content');
-            
+            console.log(cellContent);
+
             // Find the modal using its unique ID and show it
             $(modalId).find('.modal-body').html(`<div contenteditable="true">${cellContent}</div>`);
-            console.log(modalId)
-            console.log(cellContent)
+
+            // Add the "editing" class to the cell
+            $(modalId).find('.modal-body').addClass('editing');
+            
+            if (!$(this).closest('td').hasClass('expanded')) {
+                // Add the "expanded" class to the cell if it's not already expanded
+                $(this).closest('td').addClass('expanded');
+            } else {
+                // Remove the "expanded" class if it's already expanded (e.g., when closing the modal)
+                $(this).closest('td').removeClass('expanded');
+            }
+            
             $(modalId).modal('show');
         });
 
@@ -477,15 +683,14 @@
             const tableName = $('.table-name').text();
             updateMarketScan();
 
-            // Remove the "editing" class from all cells in the editingCells array
-            editingCells.forEach(function(cell) {
-                $(cell).removeClass('editing');
+            // Remove the "editing" and "expanded" classes from all cells in the editingCells array
+            editingCells.forEach(function (cell) {
+                $(cell).removeClass('editing expanded');
             });
 
             // Clear the editingCells array
             editingCells.length = 0;
         });
-
     });
 </script>
 </body>

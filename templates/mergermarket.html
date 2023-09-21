@@ -87,7 +87,7 @@
         }
 
         .save-button,
-        .refresh-button {
+        .add-row-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -136,7 +136,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
     </style>
 </head>
 <body>
@@ -168,10 +167,100 @@
 
             <div class="button-container">
                 <div class="table-name"></div>
+                <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Add a modal for adding a new row -->
+    <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRowModalLabel">Add Row</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <!-- Header columns based on your BigQuery table headers -->
+                                <th>Opportunity_ID</th>
+                                <th>Date</th>
+                                <th>Value INR_m</th>
+                                <th>Value Description</th>
+                                <th>Heading</th>
+                                <th>Opportunity</th>
+                                <th>Targets</th>
+                                <th>Lead type</th>
+                                <th>Type of transaction</th>
+                                <th>HS sector classification</th>
+                                <th>Short BD</th>
+                                <th>Source</th>
+                                <th>Intelligence Type</th>
+                                <th>Intelligence Grade</th>
+                                <th>Intelligence Size</th>
+                                <th>Stake Value</th>
+                                <th>Dominant Sector</th>
+                                <th>Sectors</th>
+                                <th>Sub Sectors</th>
+                                <th>Dominant Geography</th>
+                                <th>Geography</th>
+                                <th>States</th>
+                                <th>Topics</th>
+                                <th>Bidders</th>
+                                <th>Vendors</th>
+                                <th>Issuers</th>
+                                <th>Competitors</th>
+                                <th>Others</th>
+                                <th>Completed</th>
+                                <!-- Add other header columns here -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <!-- Input fields for each column -->
+                                <td><input type="number" id="new-opportunityId"></td>
+                                <td><input type="date" id="new-date"></td>
+                                <td><input type="text" id="new-INRm"></td>
+                                <td><input type="text" id="new-valueDesc"></td>
+                                <td><input type="text" id="new-heading"></td>
+                                <td><input type="text" id="new-opportunity"></td>
+                                <td><input type="text" id="new-targets"></td>
+                                <td><input type="text" id="new-leadtype"></td>
+                                <td><input type="text" id="new-typetrans"></td>
+                                <td><input type="text" id="new-hssector"></td>
+                                <td><input type="text" id="new-shortbd"></td>
+                                <td><input type="text" id="new-source"></td>
+                                <td><input type="text" id="new-inteltype"></td>
+                                <td><input type="text" id="new-intelgrade"></td>
+                                <td><input type="text" id="new-intelsize"></td>
+                                <td><input type="text" id="new-stakevalue"></td>
+                                <td><input type="text" id="new-domsect"></td>
+                                <td><input type="text" id="new-sect"></td>
+                                <td><input type="text" id="new-subsect"></td>
+                                <td><input type="text" id="new-domgeog"></td>
+                                <td><input type="text" id="new-geog"></td>
+                                <td><input type="text" id="new-states"></td>
+                                <td><input type="text" id="new-topics"></td>
+                                <td><input type="text" id="new-bidders"></td>
+                                <td><input type="text" id="new-vendors"></td>
+                                <td><input type="text" id="new-issuers"></td>
+                                <td><input type="text" id="new-competitors"></td>
+                                <td><input type="text" id="new-others"></td>
+                                <td><input type="text" id="new-completed"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="addRowConfirmButton">Add Row</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="table-details" style="display: none;">
         <!-- Table Data from BigQuery will be generated here -->
@@ -180,7 +269,6 @@
     <div class="loading-container">
         <div class="loading-animation"></div>
     </div>
-
 
 <!-- Add any JavaScript links or scripts here -->
 <!-- Add the SheetJS library for Excel file handling -->
@@ -291,7 +379,7 @@
                                 tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
                             }
                         } else {
-                            tableHtml += `<td> </td>`;
+                            tableHtml += `<td data-col-name="${columnName}" contenteditable="true"> </td>`;
                         }
                     }
                     tableHtml += '</tr>';
@@ -307,6 +395,10 @@
                 // Append Save Changes button
                 saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
                 $('.save-button').html(saveHtml);
+
+                // Append Add Row button
+                addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
+                $('.add-row-button').html(addHtml);
 
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
@@ -351,7 +443,6 @@
 
                 applyColumnSearch();
                 console.log("display successful")
-
 
                 // Create a "Download Table" button dynamically
                 const downloadButton = document.createElement('button');
@@ -467,6 +558,71 @@
                 });
         }
 
+        // Click event handler for the "Add Row" button
+        $('.add-row-button').click(function() {
+            $('#addRowModal').modal('show');
+        });
+
+        // Click event handler for the "Add Row" modal's "Add Row" button
+        $('#addRowConfirmButton').click(function() {
+            // Collect data from input fields
+            const newRowData = {
+                Opportunity_ID: parseFloat($('#new-opportunityId').val()) || 0, // Use 0 as a default value if not provided
+                Date: $('#new-date').val() || new Date().toISOString().slice(0, 10), // Use the current date if not provided
+                Value_INR_m: $('#new-INRm').val() || " ",
+                Value_Description: $('#new-valueDesc').val() || " ",
+                Heading: $('#new-heading').val() || " ",
+                Opportunity: $('#new-opportunity').val() || " ",
+                Targets: $('#new-targets').val() || " ",
+                Lead_Type: $('#new-leadtype').val() || " ",
+                Type_of_transaction: $('#new-typetrans').val() || " ",
+                HS_sector_classification: $('#new-hssector').val() || " ",
+                Short_BD: $('#new-shortbd').val() || " ",
+                Source: $('#new-source').val() || " ",
+                Intelligence_Type: $('#new-inteltype').val() || " ",
+                Intelligence_Grade: $('#new-intelgrade').val() || " ",
+                Intelligence_Size: $('#new-intelsize').val() || " ",
+                Stake_Value: $('#new-stakevalue').val() || " ",
+                Dominant_Sector: $('#new-domsect').val() || " ",
+                Sectors: $('#new-sect').val() || " ",
+                Sub_Sectors: $('#new-subsect').val() || " ",
+                Dominant_Geography: $('#new-domgeog').val() || " ",
+                Geography: $('#new-geog').val() || " ",
+                States: $('#new-states').val() || " ",
+                Topics: $('#new-topics').val() || " ",
+                Bidders: $('#new-bidders').val() || " ",
+                Vendors: $('#new-vendors').val() || " ",
+                Issuers: $('#new-issuers').val() || " ",
+                Competitors: $('#new-competitors').val() || " ",
+                Others: $('#new-others').val() || " ",
+                Completed: $('#new-completed').val() || " ",
+            };
+
+            // Send the new row data to the server
+            $.ajax({
+                url: 'http://127.0.0.1:5003/add_mergermarket_row',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newRowData),
+                success: function(response) {
+                    if (response.success) {
+                        alert('Row added successfully.');
+                        // Refresh the table after adding the row
+                        setTimeout(function(){
+                            window.location.reload();
+                        }, 5000); // Reload the table after a successful update
+                    } else {
+                        alert('Error adding row.');
+                    }
+                    $('#addRowModal').modal('hide');
+                },
+                error: function() {
+                    alert('Error adding row.');
+                    $('#addRowModal').modal('hide');
+                }
+            });
+        });
+
         
         $(document).on('click', '.expand-button', function () {
             const modalId = $(this).data('bs-target'); // Get the modal's target ID
@@ -489,7 +645,6 @@
             
             $(modalId).modal('show');
         });
-
 
         // Initialize an array to keep track of editing cells
         const editingCells = [];
