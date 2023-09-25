@@ -7,14 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 import uvicorn
 
-# from flask import Flask, render_template
-# from flask_cors import CORS
-
 app = FastAPI()
-
-# app = Flask(__name__)
-
-# CORS(app)
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'testing-bigquery-vertexai-service-account.json'
 client = bigquery.Client()
@@ -97,5 +90,6 @@ async def summarize_text(id: str):
     
         return JSONResponse(row[0])
 
-if __name__ == "__main__":
-    uvicorn.run("model_fastapi:app", port=8001, reload=True)
+
+if __name__ == '__main__':
+    uvicorn.run("main:app", host='127.0.0.1', port=5001, reload=True)

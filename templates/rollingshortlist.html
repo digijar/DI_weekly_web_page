@@ -88,6 +88,7 @@
 
         .save-button,
         .add-row-button,
+        .financials-button,
         .generate-assetpack-button {
             margin-right: 10px; /* Add space between buttons */
         }
@@ -204,10 +205,54 @@
                 <div class="table-name"></div>
                 <div class="generate-assetpack-button"></div>
                 <div class="add-row-button"></div>
+                <div class="financials-button"></div>
                 <div class="save-button"></div>
             </div>
         </div>
     </nav>
+
+    <!-- Initial Modal for Financials -->
+    <div class="modal fade" id="financialsModal" tabindex="-1" aria-labelledby="financialsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="financialsModalLabel">Select Financials to Scrape</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You have selected <span id="selectedCount">0</span> number of Target's financials to be scraped. Proceed?</p>
+                    <p>Targets selected:</p>
+                    <ol id="selectedTargets"></ol>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="proceedAll">Proceed</button>
+                    <button type="button" class="btn btn-secondary" id="individualScraping">Individual Scraping</button>
+                    <button type="button" class="btn btn-danger" id="scrapeAll">Scrape ALL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Modal for Individual Scraping of financials-->
+    <div class="modal fade" id="individualModal" tabindex="-1" aria-labelledby="individualModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="individualModalLabel">Individual Scraping</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="numInput">Num:</label>
+                    <input type="number" id="numInput" class="form-control">
+                    <div class="text-danger" id="NumvalidationError" style="display: none;">Num is not valid.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="proceedIndividual">Proceed with Scraping</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Modal for generating Asset Pack -->
     <div class="modal fade" id="generateAPModal" tabindex="-1" aria-labelledby="generateAPModalLabel" aria-hidden="true">
@@ -349,7 +394,7 @@
         displayRollingShortlist();
 
         function displayRollingShortlist() {
-            $.get(`http://127.0.0.1:5003/get_rollingshortlist`, function(data) {
+            $.get(`http://127.0.0.1:5004/get_rollingshortlist`, function(data) {
                 // Hide the loading animation
                 $('.loading-container').hide();
                 tableName = "Rolling_Shortlist"
@@ -363,6 +408,7 @@
                 "Sub sector",
                 "Source",
                 " Target",
+                "Populate Financials?",
                 "Business Description",
                 "Financials",
                 "Revenue_USD_M",
@@ -418,34 +464,39 @@
                     const row = tableData[opportunityId];
                     tableHtml += '<tr>';
                     for (const columnName of columnOrder) {
-                        const cellContent = row[columnName];
-                        if (cellContent !== null) {
-                            if (cellContent.length > 30) {
-                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
-                                tableHtml += `
-                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-scrollable">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body"></div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
-                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                        if (columnName === "Populate Financials?") {
+                            // Add a new column with checkboxes
+                            tableHtml += '<td data-col-name="Populate Financials?" contenteditable="false"><input type="checkbox" class="populate-financials-checkbox"></td>';
+                        } else {
+                            const cellContent = row[columnName];
+                            if (cellContent !== null) {
+                                if (cellContent.length > 30) {
+                                    const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
+                                    tableHtml += `
+                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body"></div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
+                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    `;
+                                        </td>
+                                        `;
+                                } else {
+                                    tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                                }
                             } else {
-                                tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
+                                tableHtml += `<td data-col-name="${columnName}" contenteditable="true"> </td>`;
                             }
-                        } else {
-                            tableHtml += `<td data-col-name="${columnName}" contenteditable="true"> </td>`;
                         }
                     }
                     tableHtml += '</tr>';
@@ -463,8 +514,12 @@
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
+                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width=25 height=25></button>';
                 $('.add-row-button').html(addHtml);
+
+                // Append Financials button
+                financialsHtml = '<button id="generate-financials" class="btn btn-info"><img src="../static/images/dollar.png" alt="Generate Financials" width=25 height=25></button>';
+                $('.financials-button').html(financialsHtml);
 
                 // Append Generate Asset Pack button
                 generateHtml = '<button id="generate-assetpack" class="btn" style="background-color: #9900ffff; color: white;">Generate Asset Pack</button>';
@@ -625,7 +680,7 @@
                 downloadButton.appendChild(downloadImage); // Append the image to the button
 
                 downloadButton.addEventListener('click', async () => {
-                    const response = await fetch('http://127.0.0.1:5003/download_rollingshortlist');
+                    const response = await fetch('http://127.0.0.1:5004/download_rollingshortlist');
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -698,7 +753,7 @@
             }
 
             // Send the updated data to the backend using fetch
-            fetch('http://127.0.0.1:5003/update_rollingshortlist', {
+            fetch('http://127.0.0.1:5004/update_rollingshortlist', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -776,7 +831,7 @@
 
             // Send the new row data to the server
             $.ajax({
-                url: 'http://127.0.0.1:5003/add_rollingshortlist_row',
+                url: 'http://127.0.0.1:5004/add_rollingshortlist_row',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(newRowData),
@@ -885,6 +940,124 @@
             // Check if the entered target name exists in the "Target" column values
             return targetColumnValues.includes(targetName);
         }
+
+
+        // FOR SCRAPING
+
+        // Function to update the selected count based on checked checkboxes
+        function updateSelectedCount() {
+            const checkedCheckboxes = $('#RS_table tbody td[data-col-name="Populate Financials?"] input:checked');
+            const selectedCount = checkedCheckboxes.length;
+            const selectedTargets = checkedCheckboxes.map(function () {
+                const cell = $(this).closest('tr').find('td[data-col-name=" Target"]');
+                const cellContent = cell.text().trim();
+                
+                // Check if the cell has a data-full-content attribute
+                const fullContentAttr = cell.attr('data-full-content');
+                if (fullContentAttr) {
+                    // Use the data-full-content attribute value
+                    return fullContentAttr.trim();
+                } else {
+                    return cellContent;
+                }
+            }).get();
+
+            // Update the selected count
+            $('#selectedCount').text(selectedCount);
+
+            // Update the list of selected Target names
+            const targetList = $('#selectedTargets');
+            targetList.empty(); // Clear the list
+            if (selectedTargets.length > 0) {
+                selectedTargets.forEach(function (target) {
+                    const listItem = $('<li></li>').text(target);
+                    targetList.append(listItem);
+                });
+            }
+        }
+
+        // Button click event to open the initial modal
+        $('.financials-button').click(function () {
+            updateSelectedCount(); // Update the selected count
+            $('#financialsModal').modal('show'); // Show the initial modal
+        });
+
+        // Proceed button click event in the initial modal
+        $('#proceedAll').click(function () {
+            // Handle the "Proceed" action for all selected financials
+            // You can implement your logic here
+        });
+
+        // Individual Scraping button click event in the initial modal
+        $('#individualScraping').click(function () {
+            // Close the initial modal
+            $('#financialsModal').modal('hide');
+
+            // Show the second modal for individual scraping
+            $('#individualModal').modal('show');
+        });
+
+        // Proceed button click event in the initial modal
+        $('#proceedIndividual').click(function () {
+            // Handle the "Proceed with Scraping" action for individual Target
+            // Get the entered target name from the input field
+            const enteredNum = $('#numInput').val();
+
+            // Check if the entered target name is valid
+            const isValidNum = isNumValid(enteredNum);
+
+            if (isValidNum) {
+                // Hide validation error message
+                $('#NumvalidationError').hide();
+
+                // Find the index of the entered Num in the "Num" column values
+                const rowIndex = $('#RS_table tbody td[data-col-name="Num"]').filter(function() {
+                    return $(this).text().trim() === enteredNum.toString();
+                }).closest('tr').index();
+
+                // Get the Target's name from the same row
+                const targetName = $('#RS_table tbody tr').eq(rowIndex).find('td[data-col-name=" Target"]').text().trim();
+
+                // Display the confirmation message
+                const confirmed = confirm(`You are going to populate financials for ${targetName}`);
+
+                if (confirmed) {
+                    // Close the Individual modal
+                    $('#individualModal').modal('hide');
+                }
+            } else {
+                // Display validation error message
+                $('#NumvalidationError').show();
+            }
+        });
+
+        // Function to check if the entered Num is valid
+        function isNumValid(Num) {
+            // Iterate through the values in the "Num" column of the table
+            const NumColumnValues = $('#RS_table tbody td[data-col-name="Num"]').map(function() {
+                return $(this).text().trim();
+            }).get();
+
+            // Check if the entered Num exists in the "Num" column values
+            return NumColumnValues.includes(Num.toString());
+        }
+
+        // Scrape ALL button click event in the initial modal
+        $('#scrapeAll').click(function () {
+            // Display a confirmation dialog
+            const confirmed = confirm("Are you sure you want to scrape ALL financials?");
+            
+            // Check if the user confirmed
+            if (confirmed) {
+                 // Close the initial modal
+                $('#financialsModal').modal('hide');
+                // Perform the "Scrape ALL" action
+                // You can implement your logic here
+
+                // For example, you can call a function to initiate the scraping
+                // scrapeAllFinancials();
+            }
+        });
     });
 </script>
 </body>

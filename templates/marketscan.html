@@ -427,7 +427,7 @@
                         const cellContent = row[columnName];
                         if (cellContent !== null) {
                             if (cellContent.length > 30) {
-                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
                                 tableHtml += `
                                     <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
                                         <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
@@ -469,7 +469,7 @@
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
+                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width=25 height=25></button>';
                 $('.add-row-button').html(addHtml);
 
                 // Append Populate Rolling Shortlist button
@@ -861,8 +861,6 @@
 
         // Add an event listener to the "Populate MS" button
         $('.populate-RS-button').on('click', function() {
-            console.log("populate being pressed");
-            
             // Calculate the number of rows in the table
             const numRows = $('#MS_table tbody tr').length;
 

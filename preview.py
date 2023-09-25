@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Body, Request, Response
+from fastapi import FastAPI, Request, Response
 import os
 from google.cloud import bigquery
 from json import JSONDecodeError

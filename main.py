@@ -1,9 +1,8 @@
-from fastapi import Body, FastAPI, File, UploadFile, Form, HTTPException, Request
+from fastapi import FastAPI, UploadFile, Form, HTTPException, Request
 import os
 import pandas as pd
 from google.cloud import bigquery
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 import uvicorn
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles

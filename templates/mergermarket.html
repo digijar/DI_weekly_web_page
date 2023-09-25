@@ -308,7 +308,7 @@
 
         // To display MergerMarket table
         function displayMergerMarket() {
-            $.get(`http://127.0.0.1:5003/get_mergermarket`, function(data) {
+            $.get(`http://127.0.0.1:5002/get_mergermarket`, function(data) {
                 // Hide the loading animation
                 $('.loading-container').hide();
                 tableName = "MergerMarket"
@@ -376,7 +376,7 @@
                         const cellContent = row[columnName];
                         if (cellContent !== null) {
                             if (cellContent.length > 30) {
-                                const uniqueID = `modal-${columnName.substring(0, 3)}`;
+                                const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
                                 tableHtml += `
                                     <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
                                         <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
@@ -418,7 +418,7 @@
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn btn-success">Add Row</button>';
+                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width=25 height=25></button>';
                 $('.add-row-button').html(addHtml);
 
                 // Append Populate Market Scan button
@@ -484,7 +484,7 @@
                 downloadButton.appendChild(downloadImage); // Append the image to the button
 
                 downloadButton.addEventListener('click', async () => {
-                    const response = await fetch('http://127.0.0.1:5003/download_mergermarket');
+                    const response = await fetch('http://127.0.0.1:5002/download_mergermarket');
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -556,7 +556,7 @@
             }
 
             // Send the updated data to the backend using fetch
-            fetch('http://127.0.0.1:5003/update_mergermarket', {
+            fetch('http://127.0.0.1:5002/update_mergermarket', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -633,14 +633,13 @@
 
             // Send the new row data to the server
             $.ajax({
-                url: 'http://127.0.0.1:5003/add_mergermarket_row',
+                url: 'http://127.0.0.1:5002/add_mergermarket_row',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(newRowData),
                 success: function(response) {
                     if (response.success) {
                         alert('Row added successfully.');
-                        // Refresh the table after adding the row
                         setTimeout(function(){
                             window.location.reload();
                         }, 5000); // Reload the table after a successful update
@@ -655,7 +654,6 @@
                 }
             });
         });
-
         
         $(document).on('click', '.expand-button', function () {
             const modalId = $(this).data('bs-target'); // Get the modal's target ID
@@ -706,7 +704,6 @@
 
         // Add an event listener to the "Populate MS" button
         $('.populate-MS-button').on('click', function() {
-            console.log("populate being pressed");
             // Calculate the number of rows in the table
             const numRows = $('#MM_table tbody tr').length;
 
