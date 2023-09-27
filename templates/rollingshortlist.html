@@ -920,10 +920,16 @@
                 // Valid target name, add your logic for generating Asset Pack here
                 // This function will be executed when the "Generate" button is clicked in the modal.
                 
-                // Close the Generate Asset Pack modal
-                $('#generateAPModal').modal('hide');
                 // Hide validation error message
                 $('#validationError').hide();
+
+                // Display the confirmation message
+                const confirmed = confirm(`You are going to generate an Asset Pack for ${enteredTargetName}`);
+
+                if (confirmed) {
+                    // Close the Individual modal
+                    $('#generateAPModal').modal('hide');
+                }
             } else {
                 // Display validation error message
                 $('#validationError').show();
