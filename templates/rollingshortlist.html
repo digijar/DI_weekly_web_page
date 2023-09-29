@@ -225,7 +225,7 @@
                     <ol id="selectedTargets"></ol>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-success" id="proceedAll">Proceed</button>
+                    <button type="button" class="btn btn-success" id="proceedAll" onclick="testing()">Proceed</button>
                     <button type="button" class="btn btn-secondary" id="individualScraping">Individual Scraping</button>
                     <button type="button" class="btn btn-danger" id="scrapeAll">Scrape ALL</button>
                 </div>
@@ -1065,6 +1065,21 @@
             }
         });
     });
+
+
+    function testing(){
+        console.log("testing");
+
+        // sorry jaron can you add the part where you can retrieve the name of the company that is clicked on
+
+        // hard coding target as Real Pet Food Company first
+        var target = "Real Pet Food Company"
+
+        $(async () => {
+            var serviceURL = "http://127.0.0.1:5001/summarization/" + opportunity_id;
+        })
+    }
+
 </script>
 </body>
 </html>

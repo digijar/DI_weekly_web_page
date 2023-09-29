@@ -556,22 +556,38 @@ def get_company(company):
 
 @app.route('/')
 def get_rolling_shortlist_data():
-    sql_query = "SELECT * FROM `testing-bigquery-vertexai.web_UI.Rolling_08-09-23`"
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
     result = client.query(sql_query)
 
     target_list = []
     for row in result:
         # print(row[' Target'])
         # print(row['Business Description'])
-        target_list.append(row['_Target'])
+        target_list.append(row[' Target'])
         # return "succeeded"
 
     return target_list
     # return row
 
-@app.route('/<int:num>', methods = ['GET'])
+@app.route('/test')
+def get_rolling_shortlist_data_num():
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
+    result = client.query(sql_query)
+
+    target_list = []
+    for row in result:
+        # print(row[' Target'])
+        # print(row['Business Description'])
+        target_list.append(row['Num'])
+        # print(type(row['Num']))
+        # return "succeeded"
+
+    return target_list
+    # return row
+
+@app.route('/check/<int:num>', methods = ['GET'])
 def get_rolling_shortlist_data_byNum(num):
-    sql_query = "SELECT * FROM `testing-bigquery-vertexai.web_UI.Rolling_08-09-23` WHERE Num = '{}'".format(num)
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist` WHERE Num = {};".format(num)
     # print(sql_query)
     # return sql_query
     result = client.query(sql_query)
@@ -580,55 +596,56 @@ def get_rolling_shortlist_data_byNum(num):
     
     for row in result:
         # this returns the data in Target column
-        print(row['_Target'])
-        print(get_company(row['_Target']))
+        print(row[' Target'])
+        print(get_company(row[' Target']))
         # return get_company("Apple Inc")
-        return get_company(row['_Target'])
+        return get_company(row[' Target'])
     
 @app.route('/update/<int:num>', methods = ['GET'])
 def update_rolling_shortlist(num):
-    sql_query = "SELECT * FROM `testing-bigquery-vertexai.web_UI.Rolling_08-09-23` WHERE Num = '{}'".format(num)
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist` WHERE Num = {};".format(num)
 
     result = client.query(sql_query)
 
     for row in result:
-        json_obj = get_company(row['_Target'])
-        update_sql_query = "UPDATE `testing-bigquery-vertexai.web_UI.Rolling_08-09-23` SET "
+        json_obj = get_company(row[' Target'])
+        update_sql_query = "UPDATE `testing-bigquery-vertexai.templates.Rolling_Shortlist` SET "
 
         for company, info in json_obj.items():
             if len(info) != 0:
                 for column, data in info.items():
                     if column == "Revenue":
                         data_str = str(data)
-                        update_sql_query += "Revenue__US__million_ = " + "'" + data_str + "'"
+                        update_sql_query += "`Revenue_USD_M` = " + "'" + data_str + "'"
                         update_sql_query += ", "
                     elif column == "EBITDA":
                         data_str = str(data)
-                        update_sql_query += "EBITDA__US__million_ = " + "'" + data_str + "'"
+                        update_sql_query += "`EBITDA_USD_M` = " + "'" + data_str + "'"
                         update_sql_query += ", "
                     elif column == "Valuation":
                         data_str = str(data)
-                        update_sql_query += "Valuation__c_US__million_ = " +"'" + data_str + "'"
+                        update_sql_query += "`Valuation_USD_M` = " +"'" + data_str + "'"
                         update_sql_query += ", "
                     elif column == "Other Info":
-                        update_sql_query += "Other_Info = " + "'" + data + "'"
+                        update_sql_query += "`Other Info` = " + "'" + data + "'"
                         update_sql_query += ", "
                     elif column == "Asset Pack":
-                        update_sql_query += "Asset_pack_ = " + "'" + data + "'"
+                        update_sql_query += "`Asset pack ` = " + "'" + data + "'"
                         update_sql_query += ", "
                     elif column == "Business Description":
-                        update_sql_query += "Business_Description = " + "'" + data + "'"
+                        update_sql_query += "`Business Description` = " + "'" + data + "'"
                         update_sql_query += ", "
                     elif column == "Target Region":
-                        update_sql_query +=  "Target_Region = " + "'" + data + "'"
+                        update_sql_query +=  "`Target Region` = " + "'" + data + "'"
                         update_sql_query += ", "
                 
                 update_sql_query = update_sql_query[:-2]
-                update_sql_query += " WHERE Num = '{}'".format(num)
+                update_sql_query += " WHERE Num = {};".format(num)
             
             else:
-                update_sql_query = "UPDATE `testing-bigquery-vertexai.web_UI.Rolling_08-09-23` SET Other_Info='Webscraper did not find data' WHERE Num = '{}'".format(num)
+                update_sql_query = "UPDATE `testing-bigquery-vertexai.templates.Rolling_Shortlist` SET `Other Info`='Webscraper did not find data' WHERE Num = {};".format(num)
 
+    print(update_sql_query)
     try:
         client.query(update_sql_query)
         return "success!"
