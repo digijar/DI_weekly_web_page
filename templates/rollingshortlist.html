@@ -821,7 +821,7 @@
                         // Refresh the table after adding the row
                         setTimeout(function(){
                             window.location.reload();
-                        }, 10000); // Reload the table after a successful update
+                        }, 10000);
                     } else {
                         alert('Error adding row.');
                     }
@@ -996,13 +996,26 @@
                 // scrapeAllFinancials();
             }
         });
+    });
 
-        function run_webscraper(){
+    function run_webscraper(){
 
-            // sorry jaron can you add the part where you can retrieve the Num of the company that is clicked on
+        // sorry jaron can you add the part where you can retrieve the Num of the company that is clicked on
+        const checkedCheckboxes = $('#RS_table tbody td[data-col-name="Populate Financials?"] input:checked');
 
-            // hard coding target as Apple Inc first
-            var target = "0"
+        const selectedCount = checkedCheckboxes.length;
+        const selectedTargets = checkedCheckboxes.map(function () {
+            const cell = $(this).closest('tr').find('td[data-col-name="Num"]');
+            const Num = cell.text().trim();
+            return parseFloat(Num);
+        }).get();
+
+        // hard coding target as Apple Inc first
+        // var target = "0"
+        console.log(selectedTargets);
+
+        for (target of selectedTargets){
+            console.log(target);
 
             $(async () => {
                 var serviceURL = "http://127.0.0.1:5009/update/" + target;
@@ -1014,14 +1027,15 @@
                     const response = await fetch(serviceURL, {
                     method: "GET",
                     });
-                
-                    
                     try{
                         const result = await response.json();
-
                         if (response.ok){
                             if (response.status === 200){
                                 console.log(result);
+                                // Refresh the table after successfully scraping data
+                                setTimeout(function(){
+                                    window.location.reload();
+                                }, 10000);
                             }
                         }
                     }catch{
@@ -1032,7 +1046,7 @@
                 }
             })
         }
-    });
+    }
 </script>
 </body>
 </html>

@@ -400,7 +400,7 @@ def get_capitaliq (company, final_dict, service_instance):
 
         Input: name of company
         Output: dictionary of key:value - Account: Amount
-       
+    
     '''    
     # Captial IQ
     # Login via SMU credentials
@@ -534,7 +534,7 @@ def get_capitaliq (company, final_dict, service_instance):
     
     cap_iq_date = datetime.strptime(cap_iq_date, "%d %b %Y")
     orbis_date = datetime.strptime(orbis_date, "%d %b %Y")
-      
+    
     if cap_iq_date >orbis_date:
         final_dict.update(result)
     
@@ -622,7 +622,7 @@ async def get_rolling_shortlist_data_byNum(num: int):
         return JSONResponse(content = get_company(row[' Target']))
 
 @app.get("/update/{num}")
-async def update_rolling_shortlist(num: int):
+async def update_rolling_shortlist(num: float):
 # @app.route('/update/<int:num>', methods = ['GET'])
 # def update_rolling_shortlist(num):
     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist` WHERE Num = {};".format(num)
