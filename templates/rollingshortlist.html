@@ -101,14 +101,21 @@
             cursor: pointer;
         }
 
-
         /* for SLICER CONTAINER */
+        #slicer-container {
+            white-space: nowrap;
+        }
+
         .slicer-container {
+            display: inline-block;
             max-height: 150px;
             width: 200px;
-            border: 1px solid #ccc;
+            border-radius: 10px;
+            border: 1px solid #eee;
             padding: 10px;
+            margin: 10px;
             overflow: auto; /* Enable vertical scrollbar when content overflows */
+            background-color: #fff;
         }
 
         .slicer {
@@ -118,19 +125,23 @@
         }
 
         .slicer-header {
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+            color: #333;
         }
 
         .slicer-options label {
             display: block;
             margin-bottom: 3px;
+            color: #333;
         }
 
         /* Style checkboxes to make them more visible */
         .slicer-options input[type="checkbox"] {
             margin-right: 5px;
         }
+
         .slicer-options {
             white-space: nowrap; /* Prevent line breaks */
         }
@@ -211,7 +222,7 @@
         </div>
     </nav>
 
-    <!-- Initial Modal for Financials -->
+    <!-- Modal for Financials -->
     <div class="modal fade" id="financialsModal" tabindex="-1" aria-labelledby="financialsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -226,33 +237,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" id="proceedAll" onclick="run_webscraper()">Proceed</button>
-                    <button type="button" class="btn btn-secondary" id="individualScraping">Individual Scraping</button>
                     <button type="button" class="btn btn-danger" id="scrapeAll">Scrape ALL</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> <!-- Add Cancel button -->
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Second Modal for Individual Scraping of financials-->
-    <div class="modal fade" id="individualModal" tabindex="-1" aria-labelledby="individualModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="individualModalLabel">Individual Scraping</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <label for="numInput">Num:</label>
-                    <input type="number" id="numInput" class="form-control">
-                    <div class="text-danger" id="NumvalidationError" style="display: none;">Num is not valid.</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="proceedIndividual">Proceed with Scraping</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 
     <!-- Modal for generating Asset Pack -->
     <div class="modal fade" id="generateAPModal" tabindex="-1" aria-labelledby="generateAPModalLabel" aria-hidden="true">
@@ -263,8 +253,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="targetNameInput">Target's name for Asset Pack generation:</label>
-                    <input type="text" id="targetNameInput" class="form-control" placeholder="Enter Target's Name">
+                    <label for="targetNumInput">Target's num for Asset Pack generation:</label>
+                    <input type="number" id="targetNumInput" class="form-control" placeholder="Enter Target's Num">
                     <div class="text-danger" id="validationError" style="display: none;">Target is not valid.</div>
                 </div>
                 <div class="modal-footer">
@@ -534,21 +524,17 @@
                 // Generate dropdown slicers for each column
                 const slicerContainer = document.getElementById("slicer-container");
 
-                slicerHTML = `
-                <div class="container">
-                    <div class="row">
-                `;
+                slicerHTML = ``;
 
                 for (const columnName of columnOrder) {
                     if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type", "Credentials"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
 
                         slicerHTML += `
-                        <div class="col-md-3">
-                            <div class="slicer-container">
-                                <div class="slicer">
-                                    <div class="slicer-header">${columnName}</div>
-                                    <div class="slicer-options">
+                        <div class="slicer-container">
+                            <div class="slicer">
+                                <div class="slicer-header">${columnName}</div>
+                                <div class="slicer-options">
                         `
 
                         for (const value of uniqueValues) {
@@ -558,18 +544,12 @@
                         }
 
                         slicerHTML += `
-                                    </div>
                                 </div>
                             </div>
                         </div>
                         `
                     }
                 }
-
-                slicerHTML += `
-                    </div>
-                </div>
-                `
 
                 slicerContainer.innerHTML = slicerHTML;
 
@@ -908,23 +888,29 @@
             $('#generateAPModal').modal('show');
         });
 
-        // Add an event listener to the "Generate" button in the modal
-        $('#generateAssetPackButton').on('click', function() {
+        // Proceed button click event in the initial modal
+        $('#generateAssetPackButton').click(function () {
+            // Handle the "Proceed with Scraping" action for individual Target
             // Get the entered target name from the input field
-            const enteredTargetName = $('#targetNameInput').val();
+            const enteredNum = $('#targetNumInput').val();
 
             // Check if the entered target name is valid
-            const isValidTarget = isTargetValid(enteredTargetName);
+            const isValidNum = isNumValid(enteredNum);
 
-            if (isValidTarget) {
-                // Valid target name, add your logic for generating Asset Pack here
-                // This function will be executed when the "Generate" button is clicked in the modal.
-                
+            if (isValidNum) {
                 // Hide validation error message
                 $('#validationError').hide();
 
+                // Find the index of the entered Num in the "Num" column values
+                const rowIndex = $('#RS_table tbody td[data-col-name="Num"]').filter(function() {
+                    return $(this).text().trim() === enteredNum.toString();
+                }).closest('tr').index();
+
+                // Get the Target's name from the same row
+                const targetName = $('#RS_table tbody tr').eq(rowIndex).find('td[data-col-name=" Target"]').text().trim();
+
                 // Display the confirmation message
-                const confirmed = confirm(`You are going to generate an Asset Pack for ${enteredTargetName}`);
+                const confirmed = confirm(`You are going to generate an Asset Pack for ${targetName}`);
 
                 if (confirmed) {
                     // Close the Individual modal
@@ -936,15 +922,15 @@
             }
         });
 
-        // Function to check if the entered target name is valid
-        function isTargetValid(targetName) {
-            // Iterate through the values in the "Target" column of the table
-            const targetColumnValues = $('#RS_table tbody td[data-col-name=" Target"]').map(function() {
+        // Function to check if the entered Num is valid
+        function isNumValid(Num) {
+            // Iterate through the values in the "Num" column of the table
+            const NumColumnValues = $('#RS_table tbody td[data-col-name="Num"]').map(function() {
                 return $(this).text().trim();
             }).get();
 
-            // Check if the entered target name exists in the "Target" column values
-            return targetColumnValues.includes(targetName);
+            // Check if the entered Num exists in the "Num" column values
+            return NumColumnValues.includes(Num.toString());
         }
 
 
@@ -994,60 +980,6 @@
             // You can implement your logic here
         });
 
-        // Individual Scraping button click event in the initial modal
-        $('#individualScraping').click(function () {
-            // Close the initial modal
-            $('#financialsModal').modal('hide');
-
-            // Show the second modal for individual scraping
-            $('#individualModal').modal('show');
-        });
-
-        // Proceed button click event in the initial modal
-        $('#proceedIndividual').click(function () {
-            // Handle the "Proceed with Scraping" action for individual Target
-            // Get the entered target name from the input field
-            const enteredNum = $('#numInput').val();
-
-            // Check if the entered target name is valid
-            const isValidNum = isNumValid(enteredNum);
-
-            if (isValidNum) {
-                // Hide validation error message
-                $('#NumvalidationError').hide();
-
-                // Find the index of the entered Num in the "Num" column values
-                const rowIndex = $('#RS_table tbody td[data-col-name="Num"]').filter(function() {
-                    return $(this).text().trim() === enteredNum.toString();
-                }).closest('tr').index();
-
-                // Get the Target's name from the same row
-                const targetName = $('#RS_table tbody tr').eq(rowIndex).find('td[data-col-name=" Target"]').text().trim();
-
-                // Display the confirmation message
-                const confirmed = confirm(`You are going to populate financials for ${targetName}`);
-
-                if (confirmed) {
-                    // Close the Individual modal
-                    $('#individualModal').modal('hide');
-                }
-            } else {
-                // Display validation error message
-                $('#NumvalidationError').show();
-            }
-        });
-
-        // Function to check if the entered Num is valid
-        function isNumValid(Num) {
-            // Iterate through the values in the "Num" column of the table
-            const NumColumnValues = $('#RS_table tbody td[data-col-name="Num"]').map(function() {
-                return $(this).text().trim();
-            }).get();
-
-            // Check if the entered Num exists in the "Num" column values
-            return NumColumnValues.includes(Num.toString());
-        }
-
         // Scrape ALL button click event in the initial modal
         $('#scrapeAll').click(function () {
             // Display a confirmation dialog
@@ -1064,50 +996,43 @@
                 // scrapeAllFinancials();
             }
         });
-    });
 
+        function run_webscraper(){
 
-    function run_webscraper(){
+            // sorry jaron can you add the part where you can retrieve the Num of the company that is clicked on
 
-        // sorry jaron can you add the part where you can retrieve the Num of the company that is clicked on
+            // hard coding target as Apple Inc first
+            var target = "0"
 
-        // hard coding target as Apple Inc first
-        var target = "0"
+            $(async () => {
+                var serviceURL = "http://127.0.0.1:5009/update/" + target;
+                console.log("running webscraper")
 
-        $(async () => {
-            var serviceURL = "http://127.0.0.1:5009/update/" + target;
-            console.log("running webscraper")
-
-            // should execute try block
-            // if it executes catch block instead, this means the webscraper service is offline or has issues
-            try{
-                const response = await fetch(serviceURL, {
-                method: "GET",
-                });
-            
-                
+                // should execute try block
+                // if it executes catch block instead, this means the webscraper service is offline or has issues
                 try{
-                    const result = await response.json();
+                    const response = await fetch(serviceURL, {
+                    method: "GET",
+                    });
+                
+                    
+                    try{
+                        const result = await response.json();
 
-                    if (response.ok){
-                        if (response.status === 200){
-                            console.log(result);
+                        if (response.ok){
+                            if (response.status === 200){
+                                console.log(result);
+                            }
                         }
+                    }catch{
+                        console.log("error in response.json()")
                     }
                 }catch{
-                    console.log("error in response.json()")
+                    console.log("webscraper had issue")
                 }
-            }catch{
-                console.log("webscraper had issue")
-            }
-            
-
-            
-
-            
-        })
-    }
-
+            })
+        }
+    });
 </script>
 </body>
 </html>

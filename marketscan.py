@@ -287,12 +287,20 @@ async def update_marketscan(request: Request):
             updated_column = row_data.get("column_name")
             updated_value = row_data.get("edited_value")
 
-            # Construct the UPDATE query dynamically
-            update_query = f"""
-            UPDATE `testing-bigquery-vertexai.templates.{table_name}`
-            SET `{updated_column}` = '{updated_value}'
-            WHERE `Num` = {row_id}
-            """
+            if updated_column == "Picks":
+                if updated_value == "True":
+                    update_query = (
+                        f'UPDATE `testing-bigquery-vertexai.templates.{table_name}'
+                        'SET Picks = TRUE '
+                        f'WHERE Num = {row_id}')
+
+            else: 
+                update_query = f"""
+                    UPDATE `testing-bigquery-vertexai.templates.{table_name}`
+                    SET `{updated_column}` = `{updated_value}`
+                    WHERE `Num` = {row_id}
+                    """
+
             client.query(update_query)
             
     except Exception as e:

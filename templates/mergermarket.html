@@ -133,6 +133,13 @@
             white-space: nowrap; /* Prevent line breaks */
         }
 
+        /* Centered Slicer Container */
+        .centered-slicer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         /* Style the column search input boxes */
         .column-search {
             width: 100%;
@@ -210,7 +217,7 @@
 
     <!-- Modal for confirmation of populating Market Scan -->
     <div class="modal fade" id="populateMSModal" tabindex="-2" aria-labelledby="populateMSModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="populateMSModalLabel">Populate Market Scan</h5>
@@ -419,7 +426,7 @@
                             if (cellContent.length > 30) {
                                 const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
                                 tableHtml += `
-                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
+                                    <td data-col-name="${columnName}" data-full-content='${cellContent}'>${cellContent.substring(0, 30)}
                                         <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
                                         <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-scrollable">
@@ -489,7 +496,7 @@
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
 
                         slicerHTML += `
-                        <div class="col-md-3">
+                        <div class="centered-slicer-container">
                             <div class="slicer-container">
                                 <div class="slicer">
                                     <div class="slicer-header">${columnName}</div>
@@ -874,7 +881,7 @@
             let modalContent = '';
             if (firstOpportunityId !== null) {
                 modalContent = `
-                    You are currently going to populate Market Scan with ${numRows} rows where deals are "Available".<br>
+                    You are currently going to populate Market Scan with <b>${numRows}</b> rows where deals are "Available".<br><br>
                     First Opportunity_ID: ${firstOpportunityId}<br>
                     Last Opportunity_ID: ${lastOpportunityId || 'No available Opportunity_IDs'}
                 `;

@@ -101,12 +101,20 @@
         }
 
         /* for SLICER CONTAINER */
+        #slicer-container {
+            white-space: nowrap;
+        }
+
         .slicer-container {
+            display: inline-block;
             max-height: 150px;
             width: 200px;
-            border: 1px solid #ccc;
+            border-radius: 10px;
+            border: 1px solid #eee;
             padding: 10px;
+            margin: 10px;
             overflow: auto; /* Enable vertical scrollbar when content overflows */
+            background-color: #fff;
         }
 
         .slicer {
@@ -116,19 +124,23 @@
         }
 
         .slicer-header {
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+            color: #333;
         }
 
         .slicer-options label {
             display: block;
             margin-bottom: 3px;
+            color: #333;
         }
 
         /* Style checkboxes to make them more visible */
         .slicer-options input[type="checkbox"] {
             margin-right: 5px;
         }
+
         .slicer-options {
             white-space: nowrap; /* Prevent line breaks */
         }
@@ -216,7 +228,7 @@
                     <h5 class="modal-title" id="populateRSModalLabel">Populate Rolling Shortlist</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                <div class="modal-body" id="populateRS-modal-body" style="max-height: 400px; overflow-y: auto;">
                     
                 </div>
                 <div class="modal-footer">
@@ -425,7 +437,13 @@
                     tableHtml += '<tr>';
                     for (const columnName of columnOrder) {
                         const cellContent = row[columnName];
-                        if (cellContent !== null) {
+                        if (columnName == "Picks") {
+                            // Modify this block to display a checkbox
+                            tableHtml += `<td data-col-name="${columnName}" contenteditable="true">`;
+                            tableHtml += `<input type="checkbox" ${cellContent ? 'checked' : ''}/>`;
+                            tableHtml += `</td>`;
+                        }
+                        else if (cellContent !== null) {
                             if (cellContent.length > 30) {
                                 const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
                                 tableHtml += `
@@ -485,21 +503,17 @@
                 // Generate dropdown slicers for each column
                 const slicerContainer = document.getElementById("slicer-container");
 
-                slicerHTML = `
-                <div class="container">
-                    <div class="row">
-                `;
+                slicerHTML = ``;
 
                 for (const columnName of columnOrder) {
                     if (["Lead type", "Target HS industry classification", "HS Target region", "Dominant country", "Intelligence size bucket", "Type of transaction", "Held by ASPAC priority firm_Y_or_N", "KPMG credentials_PE_Company_Both_N"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
 
                         slicerHTML += `
-                        <div class="col-md-3">
-                            <div class="slicer-container">
-                                <div class="slicer">
-                                    <div class="slicer-header">${columnName}</div>
-                                    <div class="slicer-options">
+                        <div class="slicer-container">
+                            <div class="slicer">
+                                <div class="slicer-header">${columnName}</div>
+                                <div class="slicer-options">
                         `
 
                         for (const value of uniqueValues) {
@@ -509,18 +523,12 @@
                         }
 
                         slicerHTML += `
-                                    </div>
                                 </div>
                             </div>
                         </div>
                         `
                     }
                 }
-
-                slicerHTML += `
-                    </div>
-                </div>
-                `
 
                 slicerContainer.innerHTML = slicerHTML;
 
@@ -663,14 +671,25 @@
                 showAlert = false;
 
                 editedCells.each(function () {
-                const editedCell = $(this);
-                const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row number)
-                const columnName = editedCell.data('col-name');
-                const cellValue = editedCell.text();
+                    const editedCell = $(this);
+                    const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row number)
+                    const columnName = editedCell.data('col-name');
+                    let cellValue;
 
-                console.log(Num);
-                console.log(columnName);
-                console.log(cellValue);
+                    // Handle the "Picks" column checkbox value
+                    if (columnName === "Picks") {
+                        const checkbox = editedCell.find('input[type="checkbox"]');
+                        cellValue = checkbox.is(':checked'); // Get the checked state of the checkbox
+                        if (cellValue === true) {
+                            cellValue = "True"
+                        } 
+                    } else {
+                        cellValue = editedCell.text();
+                    }
+
+                    console.log(Num);
+                    console.log(columnName);
+                    console.log(cellValue);
 
                     updatedRows.push({
                         row_id: Num,
@@ -875,7 +894,7 @@
             `;
 
             // Update the modal body with the content
-            $('.modal-body').html(modalContent);
+            $('#populateRS-modal-body').html(modalContent);
 
             // Show the confirmation modal
             $('#populateRSModal').modal('show');
