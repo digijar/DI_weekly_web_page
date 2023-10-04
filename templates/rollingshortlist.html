@@ -537,10 +537,19 @@
                                 <div class="slicer-options">
                         `
 
+                        function isWhitespace(str) {
+                            // Use a regular expression to check for whitespace characters
+                            return /^\s*$/.test(str);
+                        }
+
                         for (const value of uniqueValues) {
-                            slicerHTML += `
-                                <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
-                            `
+                            if (!isWhitespace(value)) {
+                                slicerHTML += `
+                                    <label>
+                                        <input type="checkbox" class="slicer-checkbox" value="${value}">${value}
+                                    </label>
+                                `
+                            }
                         }
 
                         slicerHTML += `

@@ -88,7 +88,8 @@
 
         .save-button,
         .add-row-button,
-        .populate-MS-button {
+        .populate-MS-button,
+        .LLM-button {
             margin-right: 10px; /* Add space between buttons */
         }
 
@@ -209,6 +210,7 @@
             <div class="button-container">
                 <div class="table-name"></div>
                 <div class="populate-MS-button"></div>
+                <div class="LLM-button"></div>
                 <div class="add-row-button"></div>
                 <div class="save-button"></div>
             </div>
@@ -476,6 +478,10 @@
                 // Append Populate Market Scan button
                 populateHtml = '<button id="populate-MS" class="btn" style="background-color: #9900ffff; color: white;">Populate MS</button>';
                 $('.populate-MS-button').html(populateHtml);
+
+                // Append LLM button
+                LLMHtml = '<button id="LLM-button" class="btn btn-info"><img src="../static/images/LLM.png" alt="Run LLM Model" width=25 height=25></button>';
+                $('.LLM-button').html(LLMHtml);
 
                 // Update the table details placeholder and show it
                 $('.table-details').html(tableHtml).show();
@@ -903,6 +909,11 @@
             
             // Close the confirmation modal
             $('#populateMSModal').modal('hide');
+        });
+
+        // Add an event listener to the LLM button
+        $('.LLM-button').on('click', function() {
+            confirm("Confirm run LLM model?")
         });
     });
 </script>

@@ -1,3 +1,8 @@
+"""
+    This is a FastAPI application that facilitates the routing of the web pages and the uploading of the excel files to BigQuery.
+    :return: The code is returning a FastAPI application instance named "app".
+"""
+
 from fastapi import FastAPI, UploadFile, Form, HTTPException, Request
 import os
 import pandas as pd
@@ -48,6 +53,17 @@ def clean_column_name(column_name, existing_names):
 
 @app.post('/upload')
 async def upload(file: List[UploadFile], tableIdInput: Annotated[str, Form()]):
+    """
+    This function allows users to upload Excel files, clean the column names, and
+    upload the data to Google BigQuery.
+    
+    :param column_name: The `column_name` parameter is a string that represents the name of a column in
+    a dataset
+    :param existing_names: The `existing_names` parameter is a list of column names that already exist
+    in the dataset. It is used in the `clean_column_name` function to check for duplicates and add a
+    suffix if necessary
+    """
+
     try:
         if not file:
             raise HTTPException(status_code=400, detail='No file selected')
