@@ -29,6 +29,14 @@ client = bigquery.Client()
 
 @app.get("/download_mergermarket")
 def download_MM():
+    """
+        The above Python function downloads data from a BigQuery table and saves it as an Excel file for the
+        user to download.
+        :return: The code is returning a Response object with the content of the Excel file, headers for
+        file download, and the media type set to
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'.
+    """
+
     table_name = "MergerMarket"
     query = """
     SELECT
@@ -167,6 +175,13 @@ def download_MM():
 
 @app.get('/get_mergermarket')
 async def get_mergermarket():
+    """
+    The function `get_mergermarket` retrieves data from a BigQuery table named "MergerMarket" and
+    returns it as a list of dictionaries.
+    :return: The function `get_mergermarket` returns a list of dictionaries. Each dictionary represents
+    a row from the `MergerMarket` table and contains the values for each column in that row.
+    """
+
     table_name = "MergerMarket"
     job = """
     SELECT
@@ -222,6 +237,19 @@ async def get_mergermarket():
 
 @app.post('/update_mergermarket')
 async def update_mergermarket(request: Request):
+    """
+    The function `update_mergermarket` updates rows in the "MergerMarket" table in a BigQuery dataset
+    based on the provided JSON data.
+    
+    :param request: The `request` parameter is an instance of the `Request` class, which represents an
+    HTTP request made to the server. It contains information about the request, such as the HTTP method,
+    headers, and body. In this case, the `request` object is used to retrieve the JSON data sent
+    :type request: Request
+    :return: a JSON response with a key-value pair indicating the success status of the update
+    operation. The key is "success" and the value is a boolean indicating whether the update operation
+    was successful or not.
+    """
+
     table_name = "MergerMarket"
 
     try:
@@ -285,6 +313,21 @@ class MergerMarketRow(BaseModel):
 
 @app.post('/add_mergermarket_row')
 async def add_mergermarket_row(request: Request, row_data: MergerMarketRow):
+    """
+    The `add_mergermarket_row` function inserts a row of data into a BigQuery table named "MergerMarket"
+    using the provided `MergerMarketRow` object.
+    
+    :param request: The `request` parameter is of type `Request` and represents the HTTP request made to
+    the server. It can be used to access information about the request, such as headers, query
+    parameters, and request body
+    :type request: Request
+    :param row_data: The `row_data` parameter is an instance of the `MergerMarketRow` class. It contains
+    the data for a single row that needs to be inserted into the "MergerMarket" table in BigQuery
+    :type row_data: MergerMarketRow
+    :return: a dictionary with a key "success" and a boolean value indicating whether the operation was
+    successful or not.
+    """
+    
     table_name = "MergerMarket"
 
     try:
