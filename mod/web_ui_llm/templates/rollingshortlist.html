@@ -201,7 +201,7 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Upload</a>
+                        <a class="nav-link" href="/upload">Upload</a>
                     </li>
                     <li class="nav-item active">
                         <a class="nav-link" href="/model_testing">Model Testing</a>
@@ -223,6 +223,10 @@
     </nav>
 
     <!-- Modal for Financials -->
+    <!-- This Modal has different Modal bodies and footers for different scenarios
+            1. if 1 or more targets' checkboxes has been checked
+            2. if no targets' checkboxes has been checked aka scrape ALL
+    -->
     <div class="modal fade" id="financialsModal" tabindex="-1" aria-labelledby="financialsModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -230,15 +234,23 @@
                     <h5 class="modal-title" id="financialsModalLabel">Select Financials to Scrape</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <!-- Modal body when checkboxes are checked -->
+                <div class="modal-body" id="modalBodyWithCheckboxes">
                     <p>You have selected <span id="selectedCount">0</span> number of Target's financials to be scraped. Proceed?</p>
                     <p>Targets selected:</p>
                     <ol id="selectedTargets"></ol>
                 </div>
-                <div class="modal-footer">
+                <!-- Modal body when no checkboxes are checked -->
+                <div class="modal-body" id="modalBodyNoCheckboxes" style="display: none;">
+                    <p>Are you sure you want to scrape ALL the financials?</p>
+                </div>
+                <div class="modal-footer" id="modalFooterWithCheckboxes">
                     <button type="button" class="btn btn-success" id="proceedAll" onclick="run_webscraper()">Proceed</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+                <div class="modal-footer" id="modalFooterNoCheckboxes" style="display: none;">
                     <button type="button" class="btn btn-danger" id="scrapeAll">Scrape ALL</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> <!-- Add Cancel button -->
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>
@@ -952,7 +964,7 @@
             const selectedTargets = checkedCheckboxes.map(function () {
                 const cell = $(this).closest('tr').find('td[data-col-name=" Target"]');
                 const cellContent = cell.text().trim();
-                
+
                 // Check if the cell has a data-full-content attribute
                 const fullContentAttr = cell.attr('data-full-content');
                 if (fullContentAttr) {
@@ -975,6 +987,19 @@
                     targetList.append(listItem);
                 });
             }
+
+            // Show/hide the appropriate modal body and footer based on the number of checkboxes checked
+            if (selectedCount > 0) {
+                $('#modalBodyWithCheckboxes').show();
+                $('#modalFooterWithCheckboxes').show();
+                $('#modalBodyNoCheckboxes').hide();
+                $('#modalFooterNoCheckboxes').hide();
+            } else {
+                $('#modalBodyWithCheckboxes').hide();
+                $('#modalFooterWithCheckboxes').hide();
+                $('#modalBodyNoCheckboxes').show();
+                $('#modalFooterNoCheckboxes').show();
+            }
         }
 
         // Button click event to open the initial modal
@@ -983,20 +1008,14 @@
             $('#financialsModal').modal('show'); // Show the initial modal
         });
 
-        // Proceed button click event in the initial modal
-        $('#proceedAll').click(function () {
-            // Handle the "Proceed" action for all selected financials
-            // You can implement your logic here
-        });
-
         // Scrape ALL button click event in the initial modal
         $('#scrapeAll').click(function () {
             // Display a confirmation dialog
             const confirmed = confirm("Are you sure you want to scrape ALL financials?");
-            
+
             // Check if the user confirmed
             if (confirmed) {
-                 // Close the initial modal
+                // Close the initial modal
                 $('#financialsModal').modal('hide');
                 // Perform the "Scrape ALL" action
                 // You can implement your logic here
@@ -1009,52 +1028,83 @@
 
     function run_webscraper(){
 
-        // sorry jaron can you add the part where you can retrieve the Num of the company that is clicked on
         const checkedCheckboxes = $('#RS_table tbody td[data-col-name="Populate Financials?"] input:checked');
 
         const selectedCount = checkedCheckboxes.length;
-        const selectedTargets = checkedCheckboxes.map(function () {
-            const cell = $(this).closest('tr').find('td[data-col-name="Num"]');
-            const Num = cell.text().trim();
+        const selectedNums = checkedCheckboxes.map(function () {
+            const cellNum = $(this).closest('tr').find('td[data-col-name="Num"]');
+            const Num = cellNum.text().trim();
             return parseFloat(Num);
+        }).get();
+
+        const selectedTargets = checkedCheckboxes.map(function () {
+            const cellTarget = $(this).closest('tr').find('td[data-col-name=" Target"]');
+            const Target = cellTarget.text();
+            return Target;
         }).get();
 
         // hard coding target as Apple Inc first
         // var target = "0"
+        console.log(selectedNums);
         console.log(selectedTargets);
-
-        for (target of selectedTargets){
-            console.log(target);
-
-            $(async () => {
-                var serviceURL = "http://127.0.0.1:5009/update/" + target;
-                console.log("running webscraper")
-
-                // should execute try block
-                // if it executes catch block instead, this means the webscraper service is offline or has issues
-                try{
-                    const response = await fetch(serviceURL, {
-                    method: "GET",
-                    });
-                    try{
-                        const result = await response.json();
-                        if (response.ok){
-                            if (response.status === 200){
-                                console.log(result);
-                                // Refresh the table after successfully scraping data
-                                setTimeout(function(){
-                                    window.location.reload();
-                                }, 10000);
-                            }
-                        }
-                    }catch{
-                        console.log("error in response.json()")
-                    }
-                }catch{
-                    console.log("webscraper had issue")
-                }
-            })
+        newTargetData = []
+        for (index in selectedNums){
+            newTargetData.push({
+                num: selectedNums[index],
+                target: selectedTargets[index]
+            });
         }
+        console.log(newTargetData);
+        // Send the new row data to the server
+        $.ajax({
+            url: 'http://127.0.0.1:5009/update',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(newTargetData),
+            success: function(response) {
+                if (response.success) {
+                    console.log('webscraper ran successfully.');
+                    // Refresh the table after adding the row
+                    setTimeout(function(){
+                        window.location.reload();
+                    }, 10000);
+                } else {
+                    console.log('webscraper had issue');
+                }
+            },
+            error: function() {
+                console.log('webscraper had issue');
+            }
+        });
+
+            // $(async () => {
+            //     var serviceURL = "http://127.0.0.1:5009/update/" + num;
+            //     console.log("running webscraper")
+
+            //     // should execute try block
+            //     // if it executes catch block instead, this means the webscraper service is offline or has issues
+            //     try{
+            //         const response = await fetch(serviceURL, {
+            //             method: "POST",
+            //         });
+            //         try{
+            //             const result = await response.json();
+            //             if (response.ok){
+            //                 if (response.status === 200){
+            //                     console.log(result);
+            //                     // Refresh the table after successfully scraping data
+            //                     setTimeout(function(){
+            //                         window.location.reload();
+            //                     }, 10000);
+            //                 }
+            //             }
+            //         }catch{
+            //             console.log("error in response.json()")
+            //         }
+            //     }catch{
+            //         console.log("webscraper had issue")
+            //     }
+            // })
     }
 </script>
 </body>

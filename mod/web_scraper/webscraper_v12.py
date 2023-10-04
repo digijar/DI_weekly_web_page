@@ -632,8 +632,8 @@ async def get_rolling_shortlist_data_byNum(num: int):
         # return get_company("Apple Inc")
         return JSONResponse(content = get_company(row[' Target']))
 
-@app.get("/update/{num}")
-async def update_rolling_shortlist(num: int):
+@app.post("/update/{num}")
+async def update_rolling_shortlist(num: float):
 # @app.route('/update/<int:num>', methods = ['GET'])
 # def update_rolling_shortlist(num):
     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist` WHERE Num = {};".format(num)
@@ -687,4 +687,4 @@ async def update_rolling_shortlist(num: int):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("webscraper_v10:app", host='127.0.0.1', port=5009, reload=True)
+    uvicorn.run("webscraper_v12:app", host='127.0.0.1', port=5009, reload=True)

@@ -356,4 +356,4 @@ async def add_rollingshortlist_row(request: Request, row_data: RollingShortlistR
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("preview:app", host='127.0.0.1', port=5004, reload=True)
+    uvicorn.run("rollingshortlist:app", host='127.0.0.1', port=5004, reload=True)

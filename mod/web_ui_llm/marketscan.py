@@ -392,4 +392,4 @@ async def add_marketscan_row(request: Request, row_data: MarketScanRow):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("preview:app", host='127.0.0.1', port=5003, reload=True)
+    uvicorn.run("marketscan:app", host='127.0.0.1', port=5003, reload=True)

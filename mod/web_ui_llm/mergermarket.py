@@ -370,4 +370,4 @@ async def add_mergermarket_row(request: Request, row_data: MergerMarketRow):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("preview:app", host='127.0.0.1', port=5002, reload=True)
+    uvicorn.run("mergermarket:app", host='127.0.0.1', port=5002, reload=True)
