@@ -29,6 +29,12 @@ client = bigquery.Client()
 
 @app.get("/download_marketscan")
 def download_MS():
+
+    """
+    The `download_MS` function downloads data from a BigQuery table and saves it as an Excel file.
+    :return: a Response object that contains the downloaded Excel file.
+    """
+
     table_name = "Market_Scan"
     query = """
     SELECT
@@ -212,6 +218,16 @@ def download_MS():
 
 @app.get('/get_marketscan')
 async def get_marketscan():
+
+    """
+    The `get_marketscan` function retrieves data from a specified table in BigQuery and returns it as a
+    JSON object.
+    :return: The function `get_marketscan()` returns a list of dictionaries. Each dictionary represents
+    a row from the `Market_Scan` table in the `testing-bigquery-vertexai.templates` dataset. The keys of
+    the dictionaries are the column names from the table, and the values are the corresponding values
+    from each row.
+    """
+
     table_name = "Market_Scan"
     job = """
     SELECT
@@ -271,6 +287,19 @@ async def get_marketscan():
 
 @app.post('/update_marketscan')
 async def update_marketscan(request: Request):
+
+    """
+    The function `update_marketscan` updates rows in a BigQuery table based on the provided JSON data.
+    
+    :param request: The `request` parameter is an instance of the `Request` class, which represents an
+    HTTP request made to the server. It contains information about the request, such as the HTTP method,
+    headers, and body. In this case, the `request` object is used to retrieve the JSON data sent
+    :type request: Request
+    :return: a JSON response with a key-value pair indicating the success status of the update
+    operation. The key is "success" and the value is a boolean indicating whether the update was
+    successful or not.
+    """
+
     table_name = "Market_Scan"
 
     try:
@@ -347,6 +376,22 @@ class MarketScanRow(BaseModel):
 
 @app.post('/add_marketscan_row')
 async def add_marketscan_row(request: Request, row_data: MarketScanRow):
+
+    """
+    The `add_marketscan_row` function inserts a row of data into a BigQuery table named "Market_Scan".
+    
+    :param request: The `request` parameter is of type `Request` and represents the HTTP request made to
+    the server. It can be used to access information about the request, such as headers, query
+    parameters, and request body
+    :type request: Request
+    :param row_data: The `row_data` parameter is an instance of the `MarketScanRow` class. It contains
+    the data for a single row that needs to be inserted into the `Market_Scan` table in BigQuery. The
+    `MarketScanRow` class likely has attributes that correspond to the columns in the
+    :type row_data: MarketScanRow
+    :return: a dictionary with a key "success" and a boolean value indicating whether the insertion of
+    the row into the BigQuery table was successful or not.
+    """
+
     table_name = "Market_Scan"
 
     try:

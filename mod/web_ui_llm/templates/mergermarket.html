@@ -102,12 +102,20 @@
         }
 
         /* for SLICER CONTAINER */
+        #slicer-container {
+            white-space: nowrap;
+        }
+
         .slicer-container {
+            display: inline-block;
             max-height: 150px;
             width: 200px;
-            border: 1px solid #ccc;
+            border-radius: 10px;
+            border: 1px solid #eee;
             padding: 10px;
+            margin: 10px;
             overflow: auto; /* Enable vertical scrollbar when content overflows */
+            background-color: #fff;
         }
 
         .slicer {
@@ -117,19 +125,23 @@
         }
 
         .slicer-header {
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+            color: #333;
         }
 
         .slicer-options label {
             display: block;
             margin-bottom: 3px;
+            color: #333;
         }
 
         /* Style checkboxes to make them more visible */
         .slicer-options input[type="checkbox"] {
             margin-right: 5px;
         }
+
         .slicer-options {
             white-space: nowrap; /* Prevent line breaks */
         }
