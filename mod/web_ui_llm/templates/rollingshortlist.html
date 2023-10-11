@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Previewing tables</title>
-    <!-- Add Bootstrap CSS -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
         body {
@@ -15,53 +15,46 @@
         }
 
         .navbar {
-            position: sticky;
+            position: sticky; /* sticky to the top of the page */
             background-color: #f8f9fa;
             border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
             z-index: 1000; /* Ensure Navbar is above other content */
         }
-
         .navbar-nav {
             margin-right: auto;
         }
 
-        /* Add this CSS to style the displayed table */
+        /* Styling the table displayed on the frontend */
         .table {
             width: 100%;
             border-collapse: collapse;
             position: relative;
         }
-
         .table th,
         .table td {
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
         }
-
         .table td {
             white-space: normal;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .table th {
             position: sticky;
             top: 0px; /* 63px for below navbar */
-            background-color: #dbdbdb; /* Set the background color */
-            color: black; /* Set the text color */
+            background-color: #dbdbdb;
+            color: black;
             z-index: 1001;
         }
-
-        /* Add this CSS to adjust the layout when table is displayed */
         .table-details {
             max-width: 800px;
             padding: 0;
         }
-
-        /* Add this CSS to change cell color when editing starts */
+        /* CSS to change cell color when editing starts */
         .table td[contenteditable="true"]:focus {
             background-color: orange;
         }
@@ -80,20 +73,18 @@
             background-color: orange;
         }
 
+        /* CSS to style the button container and buttons */
         .button-container {
             display: flex; /* Use flexbox to align buttons horizontally */
             align-items: center; /* Center items vertically within the container */
             margin-top: 10px; /* Adjust margin as needed */
         }
-
         .save-button,
         .add-row-button,
         .financials-button,
         .generate-assetpack-button {
             margin-right: 10px; /* Add space between buttons */
         }
-
-        /* Add this CSS to style the "Expand" button */
         .expand-button {
             border-radius: 10px;
             border: none;
@@ -105,7 +96,6 @@
         #slicer-container {
             white-space: nowrap;
         }
-
         .slicer-container {
             display: inline-block;
             max-height: 150px;
@@ -117,31 +107,25 @@
             overflow: auto; /* Enable vertical scrollbar when content overflows */
             background-color: #fff;
         }
-
         .slicer {
             margin-bottom: 10px;
             padding: 5px;
             border-radius: 5px;
         }
-
         .slicer-header {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
         }
-
         .slicer-options label {
             display: block;
             margin-bottom: 3px;
             color: #333;
         }
-
-        /* Style checkboxes to make them more visible */
         .slicer-options input[type="checkbox"] {
             margin-right: 5px;
         }
-
         .slicer-options {
             white-space: nowrap; /* Prevent line breaks */
         }
@@ -168,8 +152,6 @@
             background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
             z-index: 9999; /* Higher z-index to cover the entire page */
         }
-
-
         .loading-animation {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #3498db;
@@ -178,7 +160,6 @@
             height: 50px;
             animation: spin 2s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -194,6 +175,7 @@
                 <img src="../static/images/left-arrow.png" alt="Back" width="30" height="30">
             </a>
 
+            <!-- Bootstrap's NavBar styling -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -212,6 +194,7 @@
                 </ul>
             </div>
 
+            <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
                 <div class="table-name"></div>
                 <div class="generate-assetpack-button"></div>
@@ -278,7 +261,7 @@
     </div>
 
 
-    <!-- Add a modal for adding a new row -->
+    <!-- Modal for adding a new row -->
     <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -290,7 +273,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <!-- Header columns based on your specified order -->
+                                <!-- Header columns based on the BigQuery Rolling Shortlist table headers -->
                                 <th>Num</th>
                                 <th>Captured date</th>
                                 <th>BP comments</th>
@@ -325,7 +308,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <!-- Input fields for each column -->
+                                <!-- Input fields for each column (follows BigQuery's data types) -->
                                 <td><input type="number" id="new-num"></td>
                                 <td><input type="date" id="new-capturedDate"></td>
                                 <td><input type="text" id="new-bpComments"></td>
@@ -380,27 +363,34 @@
         <div class="loading-animation"></div>
     </div>
 
-<!-- Add any JavaScript links or scripts here -->
-<!-- Add the SheetJS library for Excel file handling -->
+<!-- SheetJS library for Excel file handling -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-<!-- Add Bootstrap JS -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
-
-<!-- Add jQuery for making AJAX requests -->
+<!-- jQuery for making AJAX requests -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // Show the loading animation
+        // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayRollingShortlist();
 
+        // To display Rolling Shortlist table
         function displayRollingShortlist() {
+
+            /* The following code is making an AJAX GET request to a local server at
+            `http://127.0.0.1:5004/get_rollingshortlist` to fetch data. Once the data is fetched, it
+            generates an HTML table using the fetched data and displays it on the webpage. The table
+            headers are generated based on the `columnOrder` array, and the table rows are generated
+            based on the data received. The code also includes functionality for searching and
+            filtering the table data based on user input. Additionally, it appends buttons for
+            saving changes, adding rows, asset pack generation, running the financials web scraper */
+
             $.get(`http://127.0.0.1:5004/get_rollingshortlist`, function(data) {
-                // Hide the loading animation
+                // Hide the loading animation upon loading of data from BigQuery
                 $('.loading-container').hide();
                 tableName = "Rolling_Shortlist"
-
                 const columnOrder = [
                 "Num",
                 "Captured date",
@@ -434,19 +424,15 @@
                 "Value description ",
                 "Website",
                 ];
-
-                const tableData = data; // Already parsed JSON
-
+                const tableData = data;
                 // Generate a table HTML using the fetched data
                 let tableHtml = '<table class="table" id="RS_table">';
-                    
                 // Generate table headers
                 tableHtml += '<thead><tr>';
                 for (const columnName of columnOrder) {
                     tableHtml += `
                         <th>${columnName}</th>
                     `;
-                    
                 }
                 tableHtml += '</tr></thead>';
 
@@ -459,7 +445,7 @@
                     
                 }
                 tableHtml += '</tr></thead>';
-                
+
                 // Generate table rows
                 tableHtml += '<tbody>';
                 for (const opportunityId in tableData) {
@@ -535,25 +521,20 @@
 
                 // Generate dropdown slicers for each column
                 const slicerContainer = document.getElementById("slicer-container");
-
                 slicerHTML = ``;
-
                 for (const columnName of columnOrder) {
                     if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type", "Credentials"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
-
                         slicerHTML += `
                         <div class="slicer-container">
                             <div class="slicer">
                                 <div class="slicer-header">${columnName}</div>
                                 <div class="slicer-options">
                         `
-
                         function isWhitespace(str) {
                             // Use a regular expression to check for whitespace characters
                             return /^\s*$/.test(str);
                         }
-
                         for (const value of uniqueValues) {
                             if (!isWhitespace(value)) {
                                 slicerHTML += `
@@ -563,7 +544,6 @@
                                 `
                             }
                         }
-
                         slicerHTML += `
                                 </div>
                             </div>
@@ -571,43 +551,9 @@
                         `
                     }
                 }
-
                 slicerContainer.innerHTML = slicerHTML;
 
-                function applyColumnSearch() {
-                    $('.column-search').on('input', function () {
-                        // Get all search values from all search inputs
-                        const searchValues = {};
-                        $('.column-search').each(function () {
-                            const columnName = $(this).data('col-name');
-                            const searchText = $(this).val().toLowerCase();
-                            searchValues[columnName] = searchText;
-                        });
-
-                        $('.table tbody tr').each(function () {
-                            let rowVisible = true;
-                            const $row = $(this);
-
-                            // Check if any search text matches in any of the columns
-                            for (const columnName of columnOrder) {
-                                const cellText = $row.find(`td[data-col-name="${columnName}"]`).text().toLowerCase();
-                                const searchText = searchValues[columnName];
-                                if (searchText && !cellText.includes(searchText)) {
-                                    rowVisible = false;
-                                    break;
-                                }
-                            }
-
-                            // Toggle row visibility
-                            if (rowVisible) {
-                                $row.show();
-                            } else {
-                                $row.hide();
-                            }
-                        });
-                    });
-                }
-
+                // Function for Slicer Filtering
                 function applySlicerFiltering() {
                     $('.slicer-container').on('input', 'input[type="checkbox"]', function () {
                         // Get all selected slicer values and their corresponding column names
@@ -623,35 +569,29 @@
                                 console.log(slicerHeading + ": " + selectedValues);
                             }
                         });
-
                         // Hide or show table rows based on selected slicer values
                         $('.table tbody tr').each(function () {
                             let rowVisible = true;
                             const $row = $(this);
-
                             // Check if all selected slicer values match in their respective columns
                             for (const slicerHeading in selectedSlicerValues) {
                                 const columnIndex = columnOrder.indexOf(slicerHeading);
-
                                 if (columnIndex !== -1) {
                                     const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
                                     const selectedValues = selectedSlicerValues[slicerHeading];
                                     let matchesAllValues = true;
-
                                     for (const value of selectedValues) {
                                         if (!cellText.includes(value.toLowerCase())) {
                                             matchesAllValues = false;
                                             break;
                                         }
                                     }
-
                                     if (!matchesAllValues) {
                                         rowVisible = false;
                                         break; // No need to check further
                                     }
                                 }
                             }
-
                             // Toggle row visibility
                             if (rowVisible) {
                                 $row.show();
@@ -662,24 +602,55 @@
                     });
                 }
 
-                applyColumnSearch();
+                // For Search Function
+                function applyColumnSearch() {
+                    $('.column-search').on('input', function () {
+                        // Get all search values from all search inputs
+                        const searchValues = {};
+                        $('.column-search').each(function () {
+                            const columnName = $(this).data('col-name');
+                            const searchText = $(this).val().toLowerCase();
+                            searchValues[columnName] = searchText;
+                        });
+                        $('.table tbody tr').each(function () {
+                            let rowVisible = true;
+                            const $row = $(this);
+                            // Check if any search text matches in any of the columns
+                            for (const columnName of columnOrder) {
+                                const cellText = $row.find(`td[data-col-name="${columnName}"]`).text().toLowerCase();
+                                const searchText = searchValues[columnName];
+                                if (searchText && !cellText.includes(searchText)) {
+                                    rowVisible = false;
+                                    break;
+                                }
+                            }
+                            // Toggle row visibility
+                            if (rowVisible) {
+                                $row.show();
+                            } else {
+                                $row.hide();
+                            }
+                        });
+                    });
+                }
+
+                // calling the Slicer and Search functions to apply them to the displayed table
                 applySlicerFiltering();
+                applyColumnSearch();
                 console.log("display successful");
 
-                // Create a button element
+                // FOLLOWING code is to download the BigQuery MergerMarket dataset as an excel file on the user's local machine
+                // Create a button element (following this are all DOM manipulation)
                 const downloadButton = document.createElement('button');
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn btn-warning';
-
                 // Create an image element for the button
                 const downloadImage = document.createElement('img');
-                downloadImage.src = '../static/images/download_icon.png'; // Set the image source
-                downloadImage.alt = 'Download Table'; // Set alt text for accessibility
-                downloadImage.width = 20; // Set the width
-                downloadImage.height = 20; // Set the height
-
-                downloadButton.appendChild(downloadImage); // Append the image to the button
-
+                downloadImage.src = '../static/images/download_icon.png';
+                downloadImage.alt = 'Download Table';
+                downloadImage.width = 20;
+                downloadImage.height = 20;
+                downloadButton.appendChild(downloadImage);
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5004/download_rollingshortlist');
                     const blob = await response.blob();
@@ -691,36 +662,29 @@
                     a.click();
                     window.URL.revokeObjectURL(url);
                 });
-
                 // Append the button to the button container
                 const buttonContainer = document.querySelector('.button-container');
                 buttonContainer.appendChild(downloadButton);
             });
         }
 
-
-        // Function specifically for Rolling Shortlist table
+        // Function to update the Rolling Shortlist table
         function updateRollingShortlist() {
             const editedCells = $('.table td.editing'); // Get all edited cells
             const editedModal = $('.modal-body.editing'); // Get the edited cell inside the modal
-
             let showAlert = true; // Initialize the showAlert flag as true
-
             const updatedRows = [];
-
             if (editedCells.length > 0) {
                 showAlert = false;
-
                 editedCells.each(function () {
                 const editedCell = $(this);
                 const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row number)
                 const columnName = editedCell.data('col-name');
                 const cellValue = editedCell.text();
-
+                // console.log for debugging purposes
                 console.log(Num);
                 console.log(columnName);
                 console.log(cellValue);
-
                     updatedRows.push({
                         row_id: Num,
                         column_name: columnName,
@@ -728,31 +692,25 @@
                     });
                 });
             }
-
             if (editedModal.length > 0) {
                 // Get the updated content from the modal and update the corresponding cell
                 const modalId = editedModal.closest('.modal').attr('id'); // Get the modal ID
                 const editedContent = $(`#${modalId} .modal-body`).text(); // Get the content from the modal
-
                 const Num = editedModal.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num
                 const columnName = editedModal.closest('.table td').data('col-name');
-
                 updatedRows.push({
                     row_id: Num,
                     column_name: columnName,
                     edited_value: editedContent
                 });
-
                 showAlert = false; // Modal is edited, so do not show the alert
             }
-
+            // console.log to show developer updated rows during testing
             console.log(updatedRows);
-
             if (showAlert) {
                 alert("No cell is being edited.");
                 return;
             }
-
             // Send the updated data to the backend using fetch
             fetch('http://127.0.0.1:5004/update_rollingshortlist', {
                 method: 'POST',
@@ -773,7 +731,6 @@
                     if (data.success) {
                         console.log("edit successful!");
                         alert("Edit successful!");
-
                         setTimeout(function(){
                             window.location.reload();
                         }, 10000); // Reload the table after a successful update
@@ -789,11 +746,11 @@
                 });
         }
 
+        // FOLLOWING functions are for the Add Row function on the Rolling Shortlist table
         // Click event handler for the "Add Row" button
         $('.add-row-button').click(function() {
             $('#addRowModal').modal('show');
         });
-
         // Click event handler for the "Add Row" modal's "Add Row" button
         $('#addRowConfirmButton').click(function() {
             // Collect data from input fields
@@ -829,7 +786,6 @@
                 Value_description: $('#new-valueDescription').val() || " ",
                 Website: $('#new-website').val() || " ",
             };
-
             // Send the new row data to the server
             $.ajax({
                 url: 'http://127.0.0.1:5004/add_rollingshortlist_row',
@@ -839,10 +795,9 @@
                 success: function(response) {
                     if (response.success) {
                         alert('Row added successfully.');
-                        // Refresh the table after adding the row
                         setTimeout(function(){
                             window.location.reload();
-                        }, 10000);
+                        }, 10000); // Reload the table after a successful update
                     } else {
                         alert('Error adding row.');
                     }
@@ -855,18 +810,19 @@
             });
         });
 
-        
+        // FOLLOWING few functions are for the 'Save Changes' functionality
+        // Initialize an array to keep track of editing cells
+        const editingCells = [];
+
+        // this is for showing a cell's full content in a modal
         $(document).on('click', '.expand-button', function () {
             const modalId = $(this).data('bs-target'); // Get the modal's target ID
             const cellContent = $(this).closest('td').data('full-content');
             console.log(cellContent);
-
             // Find the modal using its unique ID and show it
             $(modalId).find('.modal-body').html(`<div contenteditable="true">${cellContent}</div>`);
-
             // Add the "editing" class to the cell
             $(modalId).find('.modal-body').addClass('editing');
-            
             if (!$(this).closest('td').hasClass('expanded')) {
                 // Add the "expanded" class to the cell if it's not already expanded
                 $(this).closest('td').addClass('expanded');
@@ -874,12 +830,8 @@
                 // Remove the "expanded" class if it's already expanded (e.g., when closing the modal)
                 $(this).closest('td').removeClass('expanded');
             }
-            
             $(modalId).modal('show');
         });
-
-        // Initialize an array to keep track of editing cells
-        const editingCells = [];
 
         // Click event handler for cells with contenteditable="true"
         $(document).on('click', '.table td[contenteditable="true"]', function() {
@@ -893,46 +845,37 @@
         $(document).on('click', '#save-changes', function() {
             const tableName = $('.table-name').text();
             updateRollingShortlist();
-
             // Remove the "editing" and "expanded" classes from all cells in the editingCells array
             editingCells.forEach(function (cell) {
                 $(cell).removeClass('editing expanded');
             });
-
             // Clear the editingCells array
             editingCells.length = 0;
         });
 
+        // FOLLOWING functions is to connect to the Generate Asset Pack microservice
         // Add an event listener to the "Generate Asset Pack" button
         $('.generate-assetpack-button').on('click', function() {
             // Show the Generate Asset Pack modal
             $('#generateAPModal').modal('show');
         });
-
         // Proceed button click event in the initial modal
         $('#generateAssetPackButton').click(function () {
-            // Handle the "Proceed with Scraping" action for individual Target
             // Get the entered target name from the input field
             const enteredNum = $('#targetNumInput').val();
-
             // Check if the entered target name is valid
             const isValidNum = isNumValid(enteredNum);
-
             if (isValidNum) {
                 // Hide validation error message
                 $('#validationError').hide();
-
                 // Find the index of the entered Num in the "Num" column values
                 const rowIndex = $('#RS_table tbody td[data-col-name="Num"]').filter(function() {
                     return $(this).text().trim() === enteredNum.toString();
                 }).closest('tr').index();
-
                 // Get the Target's name from the same row
                 const targetName = $('#RS_table tbody tr').eq(rowIndex).find('td[data-col-name=" Target"]').text().trim();
-
                 // Display the confirmation message
                 const confirmed = confirm(`You are going to generate an Asset Pack for ${targetName}`);
-
                 if (confirmed) {
                     // Close the Individual modal
                     $('#generateAPModal').modal('hide');
@@ -942,21 +885,17 @@
                 $('#validationError').show();
             }
         });
-
-        // Function to check if the entered Num is valid
+        // Function to check if the entered Num in the Asset Pack Modal is valid
         function isNumValid(Num) {
             // Iterate through the values in the "Num" column of the table
             const NumColumnValues = $('#RS_table tbody td[data-col-name="Num"]').map(function() {
                 return $(this).text().trim();
             }).get();
-
             // Check if the entered Num exists in the "Num" column values
             return NumColumnValues.includes(Num.toString());
         }
 
-
-        // FOR SCRAPING
-
+        // FOLLOWING functions is to connect to the Scraping of Financials microservice
         // Function to update the selected count based on checked checkboxes
         function updateSelectedCount() {
             const checkedCheckboxes = $('#RS_table tbody td[data-col-name="Populate Financials?"] input:checked');
@@ -964,7 +903,6 @@
             const selectedTargets = checkedCheckboxes.map(function () {
                 const cell = $(this).closest('tr').find('td[data-col-name=" Target"]');
                 const cellContent = cell.text().trim();
-
                 // Check if the cell has a data-full-content attribute
                 const fullContentAttr = cell.attr('data-full-content');
                 if (fullContentAttr) {
@@ -974,10 +912,8 @@
                     return cellContent;
                 }
             }).get();
-
             // Update the selected count
             $('#selectedCount').text(selectedCount);
-
             // Update the list of selected Target names
             const targetList = $('#selectedTargets');
             targetList.empty(); // Clear the list
@@ -987,7 +923,6 @@
                     targetList.append(listItem);
                 });
             }
-
             // Show/hide the appropriate modal body and footer based on the number of checkboxes checked
             if (selectedCount > 0) {
                 $('#modalBodyWithCheckboxes').show();
@@ -1007,44 +942,33 @@
             updateSelectedCount(); // Update the selected count
             $('#financialsModal').modal('show'); // Show the initial modal
         });
-
         // Scrape ALL button click event in the initial modal
         $('#scrapeAll').click(function () {
             // Display a confirmation dialog
             const confirmed = confirm("Are you sure you want to scrape ALL financials?");
-
             // Check if the user confirmed
             if (confirmed) {
                 // Close the initial modal
                 $('#financialsModal').modal('hide');
                 // Perform the "Scrape ALL" action
-                // You can implement your logic here
-
-                // For example, you can call a function to initiate the scraping
                 // scrapeAllFinancials();
             }
         });
     });
 
     function run_webscraper(){
-
         const checkedCheckboxes = $('#RS_table tbody td[data-col-name="Populate Financials?"] input:checked');
-
         const selectedCount = checkedCheckboxes.length;
         const selectedNums = checkedCheckboxes.map(function () {
             const cellNum = $(this).closest('tr').find('td[data-col-name="Num"]');
             const Num = cellNum.text().trim();
             return parseFloat(Num);
         }).get();
-
         const selectedTargets = checkedCheckboxes.map(function () {
             const cellTarget = $(this).closest('tr').find('td[data-col-name=" Target"]');
             const Target = cellTarget.text();
             return Target;
         }).get();
-
-        // hard coding target as Apple Inc first
-        // var target = "0"
         console.log(selectedNums);
         console.log(selectedTargets);
         newTargetData = []
@@ -1076,35 +1000,6 @@
                 console.log('webscraper had issue');
             }
         });
-
-            // $(async () => {
-            //     var serviceURL = "http://127.0.0.1:5009/update/" + num;
-            //     console.log("running webscraper")
-
-            //     // should execute try block
-            //     // if it executes catch block instead, this means the webscraper service is offline or has issues
-            //     try{
-            //         const response = await fetch(serviceURL, {
-            //             method: "POST",
-            //         });
-            //         try{
-            //             const result = await response.json();
-            //             if (response.ok){
-            //                 if (response.status === 200){
-            //                     console.log(result);
-            //                     // Refresh the table after successfully scraping data
-            //                     setTimeout(function(){
-            //                         window.location.reload();
-            //                     }, 10000);
-            //                 }
-            //             }
-            //         }catch{
-            //             console.log("error in response.json()")
-            //         }
-            //     }catch{
-            //         console.log("webscraper had issue")
-            //     }
-            // })
     }
 </script>
 </body>

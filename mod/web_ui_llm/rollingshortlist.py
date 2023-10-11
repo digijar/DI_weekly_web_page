@@ -2,16 +2,12 @@ from fastapi import FastAPI, Request, Response
 import os
 from google.cloud import bigquery
 from json import JSONDecodeError
-import json
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
 from pydantic import BaseModel
 from io import BytesIO
 from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font
 import datetime
-from datetime import date
 
 app = FastAPI()
 
@@ -29,6 +25,15 @@ client = bigquery.Client()
 
 @app.get("/download_rollingshortlist")
 def download_RS():
+
+    """
+        The above Python function downloads data from a BigQuery table and saves it as an Excel file for the
+        user to download.
+        :return: The code is returning a Response object with the content of the Excel file, headers for
+        file download, and the media type set to
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'.
+    """
+
     table_name = "Rolling_Shortlist"
     query = """
     SELECT
@@ -201,6 +206,16 @@ def download_RS():
 
 @app.get('/get_rollingshortlist')
 async def get_rollingshortlist():
+
+    """
+    The function `get_rollingshortlist` retrieves data from a specified table in BigQuery and returns it
+    as a list of dictionaries.
+    :return: The function `get_rollingshortlist()` returns a list of dictionaries. Each dictionary
+    represents a row from the `Rolling_Shortlist` table in the BigQuery dataset. The keys of the
+    dictionaries are the column names from the table, and the values are the corresponding values from
+    each row.
+    """
+
     table_name = "Rolling_Shortlist"
     job = """
     SELECT
@@ -256,6 +271,20 @@ async def get_rollingshortlist():
 
 @app.post('/update_rollingshortlist')
 async def update_rollingshortlist(request: Request):
+
+    """
+    The function `update_rollingshortlist` updates rows in a table called "Rolling_Shortlist" with new
+    values provided in a JSON request.
+    
+    :param request: The `request` parameter is an instance of the `Request` class, which represents an
+    HTTP request made to the server. It contains information about the request, such as the HTTP method,
+    headers, and body
+    :type request: Request
+    :return: a JSON response with a key-value pair indicating the success status of the update
+    operation. The key is "success" and the value is a boolean indicating whether the update was
+    successful or not.
+    """
+
     table_name = "Rolling_Shortlist"
 
     try:
@@ -320,6 +349,22 @@ class RollingShortlistRow(BaseModel):
 
 @app.post('/add_rollingshortlist_row')
 async def add_rollingshortlist_row(request: Request, row_data: RollingShortlistRow):
+
+    """
+    The function `add_rollingshortlist_row` inserts a row of data into a BigQuery table called
+    "Rolling_Shortlist".
+    
+    :param request: The `request` parameter is of type `Request` and represents the HTTP request made to
+    the server. It contains information such as the request method, headers, and body
+    :type request: Request
+    :param row_data: The `row_data` parameter is an instance of the `RollingShortlistRow` class. It
+    contains the data for a single row that needs to be inserted into the "Rolling_Shortlist" table in
+    BigQuery. The attributes of the `RollingShortlistRow` class correspond
+    :type row_data: RollingShortlistRow
+    :return: a dictionary with a key "success" and a boolean value indicating whether the insertion was
+    successful or not.
+    """
+
     table_name = "Rolling_Shortlist"
 
     try:

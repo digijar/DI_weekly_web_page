@@ -2,13 +2,10 @@ from fastapi import FastAPI, Request, Response
 import os
 from google.cloud import bigquery
 from json import JSONDecodeError
-import json
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
 from pydantic import BaseModel
 from io import BytesIO
 from openpyxl import Workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font
 import datetime
 from datetime import date
@@ -29,6 +26,7 @@ client = bigquery.Client()
 
 @app.get("/download_mergermarket")
 def download_MM():
+
     """
         The above Python function downloads data from a BigQuery table and saves it as an Excel file for the
         user to download.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Previewing tables</title>
-    <!-- Add Bootstrap CSS -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
         body {
@@ -15,53 +15,45 @@
         }
 
         .navbar {
-            position: sticky;
+            position: sticky; /* sticky to the top of the page */
             background-color: #f8f9fa;
             border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
             z-index: 1000; /* Ensure Navbar is above other content */
         }
-
         .navbar-nav {
             margin-right: auto;
         }
 
-        /* Add this CSS to style the displayed table */
+        /* Styling the table displayed on the frontend */
         .table {
             width: 100%;
             border-collapse: collapse;
             position: relative;
         }
-
         .table th,
         .table td {
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
         }
-
         .table td {
             white-space: normal;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .table th {
             position: sticky;
             top: 0px; /* 63px for below navbar */
-            background-color: #dbdbdb; /* Set the background color */
-            color: black; /* Set the text color */
+            background-color: #dbdbdb;
+            color: black;
             z-index: 1001;
         }
-
-        /* Add this CSS to adjust the layout when table is displayed */
         .table-details {
             max-width: 800px;
             padding: 0;
         }
-
-        /* Add this CSS to change cell color when editing starts */
         .table td[contenteditable="true"]:focus {
             background-color: orange;
         }
@@ -80,19 +72,17 @@
             background-color: orange;
         }
 
+        /* CSS to style the button container and buttons */
         .button-container {
             display: flex; /* Use flexbox to align buttons horizontally */
             align-items: center; /* Center items vertically within the container */
             margin-top: 10px; /* Adjust margin as needed */
         }
-
         .save-button,
         .add-row-button,
         .populate-RS-button {
             margin-right: 10px; /* Add space between buttons */
         }
-
-        /* Add this CSS to style the "Expand" button */
         .expand-button {
             border-radius: 10px;
             border: none;
@@ -104,7 +94,6 @@
         #slicer-container {
             white-space: nowrap;
         }
-
         .slicer-container {
             display: inline-block;
             max-height: 150px;
@@ -116,31 +105,25 @@
             overflow: auto; /* Enable vertical scrollbar when content overflows */
             background-color: #fff;
         }
-
         .slicer {
             margin-bottom: 10px;
             padding: 5px;
             border-radius: 5px;
         }
-
         .slicer-header {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
         }
-
         .slicer-options label {
             display: block;
             margin-bottom: 3px;
             color: #333;
         }
-
-        /* Style checkboxes to make them more visible */
         .slicer-options input[type="checkbox"] {
             margin-right: 5px;
         }
-
         .slicer-options {
             white-space: nowrap; /* Prevent line breaks */
         }
@@ -167,8 +150,6 @@
             background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
             z-index: 9999; /* Higher z-index to cover the entire page */
         }
-
-
         .loading-animation {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #3498db;
@@ -177,7 +158,6 @@
             height: 50px;
             animation: spin 2s linear infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -193,10 +173,10 @@
                 <img src="../static/images/left-arrow.png" alt="Back" width="30" height="30">
             </a>
 
+            <!-- Bootstrap's NavBar styling -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
@@ -211,6 +191,7 @@
                 </ul>
             </div>
 
+            <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
                 <div class="table-name"></div>
                 <div class="populate-RS-button"></div>
@@ -239,7 +220,7 @@
         </div>
     </div>
 
-    <!-- Add a modal for adding a new row -->
+    <!-- Modal for adding a new row -->
     <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -251,7 +232,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <!-- Header columns based on your BigQuery table headers -->
+                                <!-- Header columns based on the BigQuery Market Scan table headers -->
                                 <th>Num</th>
                                 <th>Picks</th>
                                 <th>Captured in the week</th>
@@ -290,7 +271,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <!-- Input fields for each column -->
+                                <!-- Input fields for each column (follows BigQuery's data types) -->
                                 <td><input type="number" id="new-num"></td>
                                 <td><input type="checkbox" id="new-picks"></td>
                                 <td><input type="text" id="new-capturedWeek"></td>
@@ -349,28 +330,34 @@
         <div class="loading-animation"></div>
     </div>
 
-<!-- Add any JavaScript links or scripts here -->
-<!-- Add the SheetJS library for Excel file handling -->
+<!-- SheetJS library for Excel file handling -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
-<!-- Add Bootstrap JS -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
-
-<!-- Add jQuery for making AJAX requests -->
+<!-- jQuery for making AJAX requests -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // Show the loading animation
+        // Show the loading animation upon loading of the Market Scan table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayMarketScan();
 
         // To display Market Scan table
         function displayMarketScan() {
+
+            /* The following code is making an AJAX GET request to a local server at
+            `http://127.0.0.1:5003/get_marketscan` to fetch data. Once the data is fetched, it
+            generates an HTML table using the fetched data and displays it on the webpage. The table
+            headers are generated based on the `columnOrder` array, and the table rows are generated
+            based on the data received. The code also includes functionality for searching and
+            filtering the table data based on user input. Additionally, it appends buttons for
+            saving changes, adding rows, populating Rolling Shortlist */
+
             $.get(`http://127.0.0.1:5003/get_marketscan`, function(data) {
-                // Hide the loading animation
+                // Hide the loading animation upon loading of data from BigQuery
                 $('.loading-container').hide();
                 tableName = "Market_Scan"
-
                 const columnOrder = [
                     "Num",
                     "Picks",
@@ -407,12 +394,9 @@
                     "KPMG firm",
                     "Engagement partner",
                 ];
-
-                const tableData = data; // Already parsed JSON
-
+                const tableData = data;
                 // Generate a table HTML using the fetched data
                 let tableHtml = '<table class="table" id="MS_table">';
-                    
                 // Generate table headers
                 tableHtml += '<thead><tr>';
                 for (const columnName of columnOrder) {
@@ -438,7 +422,7 @@
                     for (const columnName of columnOrder) {
                         const cellContent = row[columnName];
                         if (columnName == "Picks") {
-                            // Modify this block to display a checkbox
+                            // Display a checkbox in the 'Picks' column
                             tableHtml += `<td data-col-name="${columnName}" contenteditable="true">`;
                             tableHtml += `<input type="checkbox" ${cellContent ? 'checked' : ''}/>`;
                             tableHtml += `</td>`;
@@ -502,26 +486,21 @@
 
                 // Generate dropdown slicers for each column
                 const slicerContainer = document.getElementById("slicer-container");
-
                 slicerHTML = ``;
-
                 for (const columnName of columnOrder) {
                     if (["Lead type", "Target HS industry classification", "HS Target region", "Dominant country", "Intelligence size bucket", "Type of transaction", "Held by ASPAC priority firm_Y_or_N", "KPMG credentials_PE_Company_Both_N"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
-
                         slicerHTML += `
                         <div class="slicer-container">
                             <div class="slicer">
                                 <div class="slicer-header">${columnName}</div>
                                 <div class="slicer-options">
                         `
-
                         for (const value of uniqueValues) {
                             slicerHTML += `
                                 <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
                             `
                         }
-
                         slicerHTML += `
                                 </div>
                             </div>
@@ -529,44 +508,9 @@
                         `
                     }
                 }
-
                 slicerContainer.innerHTML = slicerHTML;
 
-                // For Search Function
-                function applyColumnSearch() {
-                    $('.column-search').on('input', function () {
-                        // Get all search values from all search inputs
-                        const searchValues = {};
-                        $('.column-search').each(function () {
-                            const columnName = $(this).data('col-name');
-                            const searchText = $(this).val().toLowerCase();
-                            searchValues[columnName] = searchText;
-                        });
-
-                        $('.table tbody tr').each(function () {
-                            let rowVisible = true;
-                            const $row = $(this);
-
-                            // Check if any search text matches in any of the columns
-                            for (const columnName of columnOrder) {
-                                const cellText = $row.find(`td[data-col-name="${columnName}"]`).text().toLowerCase();
-                                const searchText = searchValues[columnName];
-                                if (searchText && !cellText.includes(searchText)) {
-                                    rowVisible = false;
-                                    break;
-                                }
-                            }
-
-                            // Toggle row visibility
-                            if (rowVisible) {
-                                $row.show();
-                            } else {
-                                $row.hide();
-                            }
-                        });
-                    });
-                }
-
+                // Function for Slicer Filtering
                 function applySlicerFiltering() {
                     $('.slicer-container').on('input', 'input[type="checkbox"]', function () {
                         // Get all selected slicer values and their corresponding column names
@@ -582,35 +526,29 @@
                                 console.log(slicerHeading + ": " + selectedValues);
                             }
                         });
-
                         // Hide or show table rows based on selected slicer values
                         $('.table tbody tr').each(function () {
                             let rowVisible = true;
                             const $row = $(this);
-
                             // Check if all selected slicer values match in their respective columns
                             for (const slicerHeading in selectedSlicerValues) {
                                 const columnIndex = columnOrder.indexOf(slicerHeading);
-
                                 if (columnIndex !== -1) {
                                     const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
                                     const selectedValues = selectedSlicerValues[slicerHeading];
                                     let matchesAllValues = true;
-
                                     for (const value of selectedValues) {
                                         if (!cellText.includes(value.toLowerCase())) {
                                             matchesAllValues = false;
                                             break;
                                         }
                                     }
-
                                     if (!matchesAllValues) {
                                         rowVisible = false;
                                         break; // No need to check further
                                     }
                                 }
                             }
-
                             // Toggle row visibility
                             if (rowVisible) {
                                 $row.show();
@@ -621,24 +559,55 @@
                     });
                 }
 
-                applyColumnSearch();
+                // For Search Function
+                function applyColumnSearch() {
+                    $('.column-search').on('input', function () {
+                        // Get all search values from all search inputs
+                        const searchValues = {};
+                        $('.column-search').each(function () {
+                            const columnName = $(this).data('col-name');
+                            const searchText = $(this).val().toLowerCase();
+                            searchValues[columnName] = searchText;
+                        });
+                        $('.table tbody tr').each(function () {
+                            let rowVisible = true;
+                            const $row = $(this);
+                            // Check if any search text matches in any of the columns
+                            for (const columnName of columnOrder) {
+                                const cellText = $row.find(`td[data-col-name="${columnName}"]`).text().toLowerCase();
+                                const searchText = searchValues[columnName];
+                                if (searchText && !cellText.includes(searchText)) {
+                                    rowVisible = false;
+                                    break;
+                                }
+                            }
+                            // Toggle row visibility
+                            if (rowVisible) {
+                                $row.show();
+                            } else {
+                                $row.hide();
+                            }
+                        });
+                    });
+                }
+
+                // calling the Slicer and Search functions to apply them to the displayed table
                 applySlicerFiltering();
+                applyColumnSearch();
                 console.log("display successful");
 
-                // Create a button element
+                // FOLLOWING code is to download the BigQuery Market Scan dataset as an excel file on the user's local machine
+                // Create a button element (following this are all DOM manipulation)
                 const downloadButton = document.createElement('button');
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn btn-warning';
-
                 // Create an image element for the button
                 const downloadImage = document.createElement('img');
-                downloadImage.src = '../static/images/download_icon.png'; // Set the image source
-                downloadImage.alt = 'Download Table'; // Set alt text for accessibility
-                downloadImage.width = 20; // Set the width
-                downloadImage.height = 20; // Set the height
-
-                downloadButton.appendChild(downloadImage); // Append the image to the button
-
+                downloadImage.src = '../static/images/download_icon.png';
+                downloadImage.alt = 'Download Table';
+                downloadImage.width = 20;
+                downloadImage.height = 20;
+                downloadButton.appendChild(downloadImage);
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5003/download_marketscan');
                     const blob = await response.blob();
@@ -650,32 +619,25 @@
                     a.click();
                     window.URL.revokeObjectURL(url);
                 });
-
                 // Append the button to the button container
                 const buttonContainer = document.querySelector('.button-container');
                 buttonContainer.appendChild(downloadButton);
             });
         }
 
-
-        // Function specifically for Market Scan table
+        // Function to update the Market Scan table
         function updateMarketScan() {
             const editedCells = $('.table td.editing'); // Get all edited cells
             const editedModal = $('.modal-body.editing'); // Get the edited cell inside the modal
-
             let showAlert = true; // Initialize the showAlert flag as true
-
             const updatedRows = [];
-
             if (editedCells.length > 0) {
                 showAlert = false;
-
                 editedCells.each(function () {
                     const editedCell = $(this);
                     const Num = editedCell.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num (unique row number)
                     const columnName = editedCell.data('col-name');
                     let cellValue;
-
                     // Handle the "Picks" column checkbox value
                     if (columnName === "Picks") {
                         const checkbox = editedCell.find('input[type="checkbox"]');
@@ -686,11 +648,10 @@
                     } else {
                         cellValue = editedCell.text();
                     }
-
+                    // console.log for debugging purposes
                     console.log(Num);
                     console.log(columnName);
                     console.log(cellValue);
-
                     updatedRows.push({
                         row_id: Num,
                         column_name: columnName,
@@ -698,31 +659,25 @@
                     });
                 });
             }
-
             if (editedModal.length > 0) {
                 // Get the updated content from the modal and update the corresponding cell
                 const modalId = editedModal.closest('.modal').attr('id'); // Get the modal ID
                 const editedContent = $(`#${modalId} .modal-body`).text(); // Get the content from the modal
-
                 const Num = editedModal.closest('tr').find('td:nth-child(1)').text(); // 1st column is Num
                 const columnName = editedModal.closest('.table td').data('col-name');
-
                 updatedRows.push({
                     row_id: Num,
                     column_name: columnName,
                     edited_value: editedContent
                 });
-
                 showAlert = false; // Modal is edited, so do not show the alert
             }
-
+            // console.log to show developer updated rows during testing
             console.log(updatedRows);
-
             if (showAlert) {
                 alert("No cell is being edited.");
                 return;
             }
-
             // Send the updated data to the backend using fetch
             fetch('http://127.0.0.1:5003/update_marketscan', {
                 method: 'POST',
@@ -743,7 +698,6 @@
                     if (data.success) {
                         console.log("edit successful!");
                         alert("Edit successful!");
-
                         setTimeout(function(){
                             window.location.reload();
                         }, 8000); // Reload the table after a successful update
@@ -759,11 +713,11 @@
                 });
         }
 
+        // FOLLOWING functions are for the Add Row function on the Market Scan table
         // Click event handler for the "Add Row" button
         $('.add-row-button').click(function() {
             $('#addRowModal').modal('show');
         });
-
         // Click event handler for the "Add Row" modal's "Add Row" button
         $('#addRowConfirmButton').click(function() {
             // Collect data from input fields
@@ -804,7 +758,6 @@
                 Engagement_partner: $('#new-engagementPartner').val() || " ",
                 // Add other fields as needed
             };
-
             // Send the new row data to the server
             $.ajax({
                 url: 'http://127.0.0.1:5003/add_marketscan_row',
@@ -814,7 +767,6 @@
                 success: function(response) {
                     if (response.success) {
                         alert('Row added successfully.');
-                        // Refresh the table after adding the row
                         setTimeout(function(){
                             window.location.reload();
                         }, 8000); // Reload the table after a successful update
@@ -830,7 +782,11 @@
             });
         });
 
-        
+        // FOLLOWING few functions are for the 'Save Changes' functionality
+        // Initialize an array to keep track of editing cells
+        const editingCells = [];
+
+        // this is for showing a cell's full content in a modal
         $(document).on('click', '.expand-button', function () {
             const modalId = $(this).data('bs-target'); // Get the modal's target ID
             const cellContent = $(this).closest('td').data('full-content');
@@ -853,9 +809,6 @@
             $(modalId).modal('show');
         });
 
-        // Initialize an array to keep track of editing cells
-        const editingCells = [];
-
         // Click event handler for cells with contenteditable="true"
         $(document).on('click', '.table td[contenteditable="true"]', function() {
             console.log("This cell is being edited!");
@@ -868,45 +821,36 @@
         $(document).on('click', '#save-changes', function() {
             const tableName = $('.table-name').text();
             updateMarketScan();
-
             // Remove the "editing" and "expanded" classes from all cells in the editingCells array
             editingCells.forEach(function (cell) {
                 $(cell).removeClass('editing expanded');
             });
-
             // Clear the editingCells array
             editingCells.length = 0;
         });
 
-        // Add an event listener to the "Populate MS" button
+        // FOLLOWING is for the integration between the Market Scan and the Rolling Shortlist tables
+        // Add an event listener to the "Populate RS" button
         $('.populate-RS-button').on('click', function() {
             // Calculate the number of rows in the table
             const numRows = $('#MS_table tbody tr').length;
-
             // Count the number of "true" values in the "Picks" column
             const numPicks = $('#MS_table tbody td[data-col-name="Picks"]').filter(function() {
                 return $(this).text().trim() === 'true';
             }).length;
-
             // Create the modal content with the updated message
             const modalContent = `
                 You are currently going to populate Rolling Shortlist with ${numPicks} rows.
             `;
-
             // Update the modal body with the content
             $('#populateRS-modal-body').html(modalContent);
-
             // Show the confirmation modal
             $('#populateRSModal').modal('show');
         });
-
-        // ... (other code)
-
         // Add an event listener to the "Populate" button in the confirmation modal
         $('#populateRSModalConfirm').on('click', function() {
             // Add logic for populating Rolling Shortlist here
-            // This function will be executed when the "Populate" button is clicked in the modal.
-            
+
             // Close the confirmation modal
             $('#populateRSModal').modal('hide');
         });
