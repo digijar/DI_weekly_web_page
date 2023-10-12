@@ -1,5 +1,10 @@
 import httpx
+from fastapi import FastAPI, Request, Response
+from google.cloud import bigquery
+from json import JSONDecodeError
 import json
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 '''import webscraper libraries'''
 from selenium.webdriver.common.keys import Keys
@@ -27,6 +32,17 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--no-first-run")
 chrome_options.add_argument("--no-default-browser-check")
 chrome_options.add_argument('--start-maximized')
+
+app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_orbis (company, final_dict, service_instance):
     '''This function takes in the name of a company, the final_dict dictionary and returns a dictionary of up to 6 items, of each account 
@@ -561,8 +577,9 @@ def get_company(company):
 
 microservice_url = "http://127.0.0.1:5011"
 
-async def retrieve_data_from_microservice(row_num):
-    async with httpx.AsyncClient() as client:
+@app.get('/scrape/{row_num}')
+async def webscraping(row_num:int):
+    async with httpx.AsyncClient(timeout=30.0) as client:
         # Make an HTTP GET request to the endpoint with row_num in the path
         response = await client.get(f"{microservice_url}/bq/{str(row_num)}")
 
@@ -582,141 +599,22 @@ async def retrieve_data_from_microservice(row_num):
             "target": company_name,
             "scraped_data": scraped_data
         }
-
+        ## send back to retrieve to update
         async with httpx.AsyncClient() as client:
             update_response = await client.post(f"{microservice_url}/update", json=update_data)
-
+            success = True
             if update_response.status_code == 200:
-            # Check if the update was successful
+                # Check if the update was successful
                 update_result = update_response.json()
                 if update_result.get("success"):
                     print("Data update successful.")
                 else:
                     print("Data update failed.")
+                    success = False
+                return {"Data update successful?": success}
             else:
                 print(f"Update request failed with status code: {update_response.status_code}")
-        
 
-# @app.get("/")
-# async def get_rolling_shortlist_data():
-#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
-#     result = client.query(sql_query)
-
-#     target_list = []
-#     for row in result:
-#         # print(row[' Target'])
-#         # print(row['Business Description'])
-#         target_list.append(row[' Target'])
-#         # return "succeeded"
-
-#     return JSONResponse(content = target_list)
-#     # return row
-
-# @app.get("/test")
-# async def get_rolling_shortlist_data_num():
-#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
-#     result = client.query(sql_query)
-
-#     target_list = []
-#     for row in result:
-#         # print(row[' Target'])
-#         # print(row['Business Description'])
-#         target_list.append(row['Num'])
-#         # print(type(row['Num']))
-#         # return "succeeded"
-
-#     return target_list
-#     # return row
-
-# @app.get("/check/{num}")
-# async def get_rolling_shortlist_data_byNum(num: int):
-# # @app.route('/check/<int:num>', methods = ['GET'])
-# # def get_rolling_shortlist_data_byNum(num):
-#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist` WHERE Num = {};".format(num)
-#     # print(sql_query)
-#     # return sql_query
-#     result = client.query(sql_query)
-
-#     print("====")
-    
-#     for row in result:
-#         # this returns the data in Target column
-#         print(row[' Target'])
-#         print(get_company(row[' Target']))
-#         # return get_company("Apple Inc")
-#         return JSONResponse(content = get_company(row[' Target']))
-
-# @app.post("/update")
-# async def update_rolling_shortlist(request: Request):
-#     try:
-#         data = await request.json()
-#     except JSONDecodeError:
-#         return 'Invalid JSON data.'
-    
-#     success = True
-
-#     try:
-#         for target_data in data:
-#             num = target_data.get('num')
-#             target = target_data.get('target')
-#             print(num)
-#             print(target)
-                
-#             json_obj = get_company(target)
-#             update_sql_query = "UPDATE `testing-bigquery-vertexai.templates.Rolling_Shortlist` SET "
-
-#             for company, info in json_obj.items():
-#                 if len(info) != 0:
-#                     for column, data in info.items():
-#                         if column == "Revenue":
-#                             data_str = str(data)
-#                             update_sql_query += "`Revenue_USD_M` = " + "'" + data_str + "'"
-#                             update_sql_query += ", "
-#                         elif column == "EBITDA":
-#                             data_str = str(data)
-#                             update_sql_query += "`EBITDA_USD_M` = " + "'" + data_str + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Valuation":
-#                             data_str = str(data)
-#                             update_sql_query += "`Valuation_USD_M` = " +"'" + data_str + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Other Info":
-#                             update_sql_query += "`Other Info` = " + "'" + data + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Asset Pack":
-#                             update_sql_query += "`Asset pack ` = " + "'" + data + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Business Description":
-#                             update_sql_query += "`Business Description` = " + "'" + data + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Target Region":
-#                             update_sql_query +=  "`Target Region` = " + "'" + data + "'"
-#                             update_sql_query += ", "
-#                         elif column == "Website":
-#                             update_sql_query += "`Website` = " + "'" + data + "'"
-#                             update_sql_query += ", "
-                    
-#                     update_sql_query = update_sql_query[:-2]
-#                     update_sql_query += " WHERE Num = {};".format(num)
-                
-#                 else:
-#                     update_sql_query = "UPDATE `testing-bigquery-vertexai.templates.Rolling_Shortlist` SET `Other Info`='Webscraper did not find data' WHERE Num = {};".format(num)
-
-#             print(update_sql_query)
-#             client.query(update_sql_query)
-
-#     except Exception as e:
-#         print(e)
-#         success = False
-    
-#     return {"success": success}
-    
-    # try:
-    #     client.query(update_sql_query)
-    #     return JSONResponse({"status":"success!"})
-    # except Exception as e:
-    #     return JSONResponse({"status":"failed!"})
-
-# if __name__ == '__main__':
-#     import uvicorn
-#     uvicorn.run("webscraper_v15:app", host='127.0.0.1', port=5009, reload=True)
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("webscraper_v16:app", host='127.0.0.1', port=5009, reload=True)

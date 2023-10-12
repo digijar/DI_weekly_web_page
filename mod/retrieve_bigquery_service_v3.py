@@ -120,6 +120,8 @@ async def update_rolling_shortlist(request: Request):
         target = data.get('target')
         json_obj = data.get('scraped_data')
 
+        update_sql_query = "UPDATE `testing-bigquery-vertexai.templates.Rolling_Shortlist` SET "
+
         for company, info in json_obj.items():
             if len(info) != 0:
                 for column, data in info.items():
