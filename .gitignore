@@ -1,2 +1,3 @@
 *.env
 testing-bigquery-vertexai-service-account.json
+mod/testing_bigquery_vertexai_service_account.json
