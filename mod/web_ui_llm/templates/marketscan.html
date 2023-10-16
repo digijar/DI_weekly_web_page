@@ -7,6 +7,9 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
     <style>
+        * {
+            font-size: 10px;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -76,7 +79,6 @@
         .button-container {
             display: flex; /* Use flexbox to align buttons horizontally */
             align-items: center; /* Center items vertically within the container */
-            margin-top: 10px; /* Adjust margin as needed */
         }
         .save-button,
         .add-row-button,
@@ -96,22 +98,21 @@
         }
         .inner-slicer-container {
             display: inline-block;
-            max-height: 150px;
-            width: 200px;
+            max-height: 120px;
+            width: 150px;
             border-radius: 10px;
             border: 1px solid #eee;
-            padding: 10px;
+            padding: 3px;
             margin: 10px;
             overflow: auto; /* Enable vertical scrollbar when content overflows */
             background-color: #fff;
         }
         .slicer {
-            margin-bottom: 10px;
             padding: 5px;
             border-radius: 5px;
         }
         .slicer-header {
-            font-size: 16px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
@@ -170,7 +171,7 @@
         <div class="container-fluid">
             <!-- Back Button -->
             <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
-                <img src="../static/images/left-arrow.png" alt="Back" width="30" height="30">
+                <img src="../static/images/left-arrow.png" alt="Back" width="15" height="15">
             </a>
 
             <!-- Bootstrap's NavBar styling -->
@@ -178,20 +179,20 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav nav-tabs me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="/upload">Upload</a>
                     </li>
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <a class="nav-link" href="/preview">Preview Tables</a>
                     </li>
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
                     </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
                     </li>
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
                     </li>
                 </ul>
@@ -326,9 +327,9 @@
     </div>
 
     <div id="slicer-container">
-        <div class="text-center my-2">
-            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#inner-slicer-container" aria-expanded="true" aria-controls="inner-slicer-container">
-                Toggle Slicers
+        <div>
+            <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#inner-slicer-container" aria-expanded="true" aria-controls="centered-slicer-container">
+                <img src="../static/images/Up_arrow.png" width="10" height="10">
             </button>
         </div>
         <!-- Dropdown slicers will be generated here -->
@@ -478,19 +479,19 @@
                 tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
 
                 // Append table name
-                tableNameHtml = `<h4 style='margin-right: 10px;'>${tableName}</h4>`
+                tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px;'>${tableName}</p>`
                 $('.table-name').html(tableNameHtml);
 
                 // Append Save Changes button
-                saveHtml = '<button id="save-changes" class="btn btn-primary"><img src="../static/images/diskette.png" alt="Save Changes" width=25 height=25></button>';
+                saveHtml = '<button id="save-changes" class="btn btn-primary"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width=25 height=25></button>';
+                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width="15" height="15"></button>';
                 $('.add-row-button').html(addHtml);
 
                 // Append Populate Rolling Shortlist button
-                populateHtml = '<button id="populate-RS" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/move_tables.png" alt="Populate RS" width=25 height=25></button>';
+                populateHtml = '<button id="populate-RS" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/move_tables.png" alt="Populate RS" width="15" height="15"></button>';
                 $('.populate-RS-button').html(populateHtml);
 
                 // Update the table details placeholder and show it
@@ -620,8 +621,8 @@
                 const downloadImage = document.createElement('img');
                 downloadImage.src = '../static/images/download_icon.png';
                 downloadImage.alt = 'Download Table';
-                downloadImage.width = 20;
-                downloadImage.height = 20;
+                downloadImage.width = 15;
+                downloadImage.height = 15;
                 downloadButton.appendChild(downloadImage);
                 downloadButton.addEventListener('click', async () => {
                     const response = await fetch('http://127.0.0.1:5003/download_marketscan');
