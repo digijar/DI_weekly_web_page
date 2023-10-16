@@ -79,10 +79,16 @@
                         <a class="nav-link" href="/upload">Upload</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                        <a class="nav-link" href="/preview">Preview Tables</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/preview">Preview Tables</a>
+                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
                     </li>
                 </ul>
             </div>
@@ -110,6 +116,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    
     $(document).ready(function() {
         $('.tile').click(function() {
             const tableName = $(this).find('.tile-title').text();

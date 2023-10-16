@@ -96,7 +96,7 @@
         #slicer-container {
             white-space: nowrap;
         }
-        .slicer-container {
+        .inner-slicer-container {
             display: inline-block;
             max-height: 150px;
             width: 200px;
@@ -171,7 +171,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <!-- Back Button -->
-            <a class="navbar-brand" href="/preview">
+            <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
                 <img src="../static/images/left-arrow.png" alt="Back" width="30" height="30">
             </a>
 
@@ -186,10 +186,16 @@
                         <a class="nav-link" href="/upload">Upload</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                        <a class="nav-link" href="/preview">Preview Tables</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/preview">Preview Tables</a>
+                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
                     </li>
                 </ul>
             </div>
@@ -197,10 +203,11 @@
             <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
                 <div class="table-name"></div>
-                <div class="generate-assetpack-button"></div>
-                <div class="add-row-button"></div>
-                <div class="financials-button"></div>
-                <div class="save-button"></div>
+                <div class="generate-assetpack-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Generate Asset Pack"></div>
+                <div class="add-row-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Add New Row"></div>
+                <div class="financials-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Webscrape Company Financials"></div>
+                <div class="save-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save Changes"></div>
+                <div class="download-button" data-bs-toggle="tooltip" data-bs-title="Download Rolling Shortlist into Excel"></div>
             </div>
         </div>
     </nav>
@@ -352,6 +359,11 @@
     </div>
 
     <div id="slicer-container">
+        <div class="text-center my-2">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#inner-slicer-container" aria-expanded="true" aria-controls="inner-slicer-container">
+                Toggle Slicers
+            </button>
+        </div>
         <!-- Dropdown slicers will be generated here -->
     </div>
 
@@ -371,6 +383,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
     $(document).ready(function() {
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
@@ -498,7 +513,7 @@
                 $('.table-name').html(tableNameHtml);
 
                 // Append Save Changes button
-                saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                saveHtml = '<button id="save-changes" class="btn btn-primary"><img src="../static/images/diskette.png" alt="Save Changes" width=25 height=25></button>';
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
@@ -510,7 +525,7 @@
                 $('.financials-button').html(financialsHtml);
 
                 // Append Generate Asset Pack button
-                generateHtml = '<button id="generate-assetpack" class="btn" style="background-color: #9900ffff; color: white;">Generate Asset Pack</button>';
+                generateHtml = '<button id="generate-assetpack" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/ppt.png" alt="Generate Asset Pack" width=25 height=25></button>';
                 $('.generate-assetpack-button').html(generateHtml);
 
                 // Update the table details placeholder and show it
@@ -526,7 +541,7 @@
                     if (["BP comments", "Geographic region", "Target Region", "Target country", "Source", "Target HS industry classification ", "Lead type", "Credentials"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
                         slicerHTML += `
-                        <div class="slicer-container">
+                        <div class="inner-slicer-container show" id="inner-slicer-container">
                             <div class="slicer">
                                 <div class="slicer-header">${columnName}</div>
                                 <div class="slicer-options">
@@ -551,14 +566,14 @@
                         `
                     }
                 }
-                slicerContainer.innerHTML = slicerHTML;
+                slicerContainer.innerHTML += slicerHTML;
 
                 // Function for Slicer Filtering
                 function applySlicerFiltering() {
-                    $('.slicer-container').on('input', 'input[type="checkbox"]', function () {
+                    $('.inner-slicer-container').on('input', 'input[type="checkbox"]', function () {
                         // Get all selected slicer values and their corresponding column names
                         const selectedSlicerValues = {};
-                        $('.slicer-container').each(function () {
+                        $('.inner-slicer-container').each(function () {
                             const slicerHeading = $(this).find('.slicer-header').text().trim();
                             const selectedValues = [];
                             $(this).find('input[type="checkbox"]:checked').each(function () {
@@ -663,8 +678,8 @@
                     window.URL.revokeObjectURL(url);
                 });
                 // Append the button to the button container
-                const buttonContainer = document.querySelector('.button-container');
-                buttonContainer.appendChild(downloadButton);
+                const downloadDiv = document.querySelector('.download-button');
+                downloadDiv.appendChild(downloadButton);
             });
         }
 

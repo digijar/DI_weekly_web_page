@@ -39,13 +39,19 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Upload</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                        <a class="nav-link" href="/upload">Upload</a>
                     </li>
                     <li class="nav-item active">
                         <a class="nav-link" href="/preview">Preview Tables</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
                     </li>
                 </ul>
             </div>
@@ -70,4 +76,9 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </body>
+
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
 </html>

@@ -135,6 +135,17 @@
             justify-content: center;
             align-items: center;
         }
+        .slicer-toggle {
+            font-weight: bold;
+            font-size: 18px;
+            transition: transform 0.2s;
+        }
+        .slicer-open {
+            display: block;
+        }
+        .slicer-closed {
+            display: none;
+        }
 
         /* Style the column search input boxes */
         .column-search {
@@ -178,7 +189,7 @@
         <div class="container-fluid">
 
             <!-- Back Button -->
-            <a class="navbar-brand" href="/preview">
+            <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
                 <img src="../static/images/left-arrow.png" alt="Back" width="30" height="30">
             </a>
 
@@ -192,10 +203,16 @@
                         <a class="nav-link" href="/upload">Upload</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/model_testing">Model Testing</a>
+                        <a class="nav-link" href="/preview">Preview Tables</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/preview">Preview Tables</a>
+                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
                     </li>
                 </ul>
             </div>
@@ -203,10 +220,11 @@
             <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
                 <div class="table-name"></div>
-                <div class="populate-MS-button"></div>
-                <div class="LLM-button"></div>
-                <div class="add-row-button"></div>
-                <div class="save-button"></div>
+                <div class="populate-MS-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Populate Market Scan"></div>
+                <div class="LLM-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Trigger LLM"></div>
+                <div class="add-row-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Add New Row"></div>
+                <div class="save-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save Changes"></div>
+                <div class="download-button" data-bs-toggle="tooltip" data-bs-title="Download MergerMarket into Excel"></div>
             </div>
         </div>
     </nav>
@@ -319,6 +337,11 @@
     </div>
 
     <div id="slicer-container">
+        <div class="text-center my-2">
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#centered-slicer-container" aria-expanded="true" aria-controls="centered-slicer-container">
+                Toggle Slicers
+            </button>
+        </div>
         <!-- Dropdown slicers will be generated here -->
     </div>
 
@@ -338,6 +361,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
     $(document).ready(function() {
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
@@ -464,7 +490,7 @@
                 $('.table-name').html(tableNameHtml);
 
                 // Append Save Changes button
-                saveHtml = '<button id="save-changes" class="btn btn-primary">Save Changes</button>';
+                saveHtml = '<button id="save-changes" class="btn btn-primary"><img src="../static/images/diskette.png" alt="Save Changes" width=25 height=25></button>';
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
@@ -472,7 +498,7 @@
                 $('.add-row-button').html(addHtml);
 
                 // Append Populate Market Scan button
-                populateHtml = '<button id="populate-MS" class="btn" style="background-color: #9900ffff; color: white;">Populate MS</button>';
+                populateHtml = '<button id="populate-MS" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/move_tables.png" alt="Populate MS" width=25 height=25></button>';
                 $('.populate-MS-button').html(populateHtml);
 
                 // Append LLM button
@@ -495,7 +521,7 @@
                     if (["Completed"].includes(columnName)) {
                         const uniqueValues = [...new Set(tableData.map(row => row[columnName]))];
                         slicerHTML += `
-                        <div class="centered-slicer-container">
+                        <div class="centered-slicer-container show" id="centered-slicer-container">
                             <div class="slicer-container">
                                 <div class="slicer">
                                     <div class="slicer-header">${columnName}</div>
@@ -518,7 +544,7 @@
                     </div>
                 </div>
                 `
-                slicerContainer.innerHTML = slicerHTML;
+                slicerContainer.innerHTML += slicerHTML;
 
                 // Function for Slicer Filtering
                 function applySlicerFiltering() {
@@ -630,8 +656,8 @@
                     window.URL.revokeObjectURL(url);
                 });
                 // Append the button to the button container
-                const buttonContainer = document.querySelector('.button-container');
-                buttonContainer.appendChild(downloadButton);
+                const downloadDiv = document.querySelector('.download-button');
+                downloadDiv.appendChild(downloadButton);
             });
         }
 
