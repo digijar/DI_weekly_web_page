@@ -577,7 +577,7 @@ def get_company(company):
 
 microservice_url = "http://127.0.0.1:5011"
 
-@app.get('/scrape/{row_num}')
+@app.get('/scrape')
 async def webscraping(row_num:int):
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Make an HTTP GET request to the endpoint with row_num in the path
