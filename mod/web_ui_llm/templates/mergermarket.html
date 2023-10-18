@@ -21,7 +21,7 @@
 
         .navbar {
             position: sticky; /* sticky to the top of the page */
-            background-color: #f8f9fa;
+            background-color: #6a6a6a;
             border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
@@ -183,7 +183,7 @@
 </head>
 <body>
     
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
 
             <!-- Back Button -->
@@ -198,19 +198,19 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav nav-tabs me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/upload">Upload</a>
+                        <a class="nav-link" href="/upload" style="color: white;">Upload</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/preview">Preview Tables</a>
+                        <a class="nav-link" href="/preview" style="color: white;">Preview Tables</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan" style="color: white;">MS</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
+                        <a class="nav-link" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist" style="color: white;">RS</a>
                     </li>
                 </ul>
             </div>
@@ -484,23 +484,23 @@
                 tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
 
                 // Append table name
-                tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px;'>${tableName}</p>`
+                tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px; color: white;'>${tableName}</p>`
                 $('.table-name').html(tableNameHtml);
 
                 // Append Save Changes button
-                saveHtml = '<button id="save-changes" class="btn" style="background-color: #0091DA;"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
+                saveHtml = '<button id="save-changes" class="btn"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn" style="background-color: #00338D;"><img src="../static/images/plus.png" alt="Add Row" width="15" height="15"></button>';
+                addHtml = '<button id="add-row" class="btn"><img src="../static/images/plus.png" alt="Add Row" width="15" height="15"></button>';
                 $('.add-row-button').html(addHtml);
 
                 // Append Populate Market Scan button
-                populateHtml = '<button id="populate-MS" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/move_tables.png" alt="Populate MS" width="15" height="15"></button>';
+                populateHtml = '<button id="populate-MS" class="btn"><img src="../static/images/move_tables.png" alt="Populate MS" width="15" height="15"></button>';
                 $('.populate-MS-button').html(populateHtml);
 
                 // Append LLM button
-                LLMHtml = '<button id="LLM-button" class="btn" style="background-color: #005EB8;"><img src="../static/images/LLM.png" alt="Run LLM Model" width="15" height="15"></button>';
+                LLMHtml = '<button id="LLM-button" class="btn"><img src="../static/images/LLM.png" alt="Run LLM Model" width="15" height="15"></button>';
                 $('.LLM-button').html(LLMHtml);
 
                 // Update the table details placeholder and show it
@@ -635,7 +635,6 @@
                 const downloadButton = document.createElement('button');
                 downloadButton.id = 'download-button';
                 downloadButton.className = 'btn';
-                downloadButton.style.backgroundColor = '#00A3A1';
                 // Create an image element for the button
                 const downloadImage = document.createElement('img');
                 downloadImage.src = '../static/images/download_icon.png';

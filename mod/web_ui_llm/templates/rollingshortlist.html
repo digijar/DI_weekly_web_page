@@ -19,7 +19,7 @@
 
         .navbar {
             position: sticky; /* sticky to the top of the page */
-            background-color: #f8f9fa;
+            background-color: #6a6a6a;
             border-bottom: 1px solid #ddd;
             position: sticky;
             top: 0;
@@ -169,7 +169,7 @@
 </head>
 <body>
     
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
             <!-- Back Button -->
             <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
@@ -184,16 +184,16 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav nav-tabs me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/upload">Upload</a>
+                        <a class="nav-link" href="/upload" style="color: white;">Upload</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/preview">Preview Tables</a>
+                        <a class="nav-link" href="/preview" style="color: white;">Preview Tables</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
+                        <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket" style="color: white;">MM</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan">MS</a>
+                        <a class="nav-link" href="/marketscan" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Market Scan" style="color: white;">MS</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/rollingshortlist" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Rolling Shortlist">RS</a>
@@ -510,23 +510,23 @@
                 tableHtml = tableHtml.replace(/<td>/g, '<td contenteditable="true">');
 
                 // Append table name
-                tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px;'>${tableName}</p>`
+                tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px; color: white;'>${tableName}</p>`
                 $('.table-name').html(tableNameHtml);
 
                 // Append Save Changes button
-                saveHtml = '<button id="save-changes" class="btn btn-primary"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
+                saveHtml = '<button id="save-changes" class="btn"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
                 $('.save-button').html(saveHtml);
 
                 // Append Add Row button
-                addHtml = '<button id="add-row" class="btn btn-success"><img src="../static/images/plus.png" alt="Add Row" width="15" height="15"></button>';
+                addHtml = '<button id="add-row" class="btn"><img src="../static/images/plus.png" alt="Add Row" width="15" height="15"></button>';
                 $('.add-row-button').html(addHtml);
 
                 // Append Financials button
-                financialsHtml = '<button id="generate-financials" class="btn btn-info"><img src="../static/images/dollar.png" alt="Generate Financials" width="15" height="15"></button>';
+                financialsHtml = '<button id="generate-financials" class="btn"><img src="../static/images/dollar.png" alt="Generate Financials" width="15" height="15"></button>';
                 $('.financials-button').html(financialsHtml);
 
                 // Append Generate Asset Pack button
-                generateHtml = '<button id="generate-assetpack" class="btn" style="background-color: #9900ffff; color: white;"><img src="../static/images/ppt.png" alt="Generate Asset Pack" width="15" height="15"></button>';
+                generateHtml = '<button id="generate-assetpack" class="btn"><img src="../static/images/ppt.png" alt="Generate Asset Pack" width="15" height="15"></button>';
                 $('.generate-assetpack-button').html(generateHtml);
 
                 // Update the table details placeholder and show it
@@ -659,7 +659,7 @@
                 // Create a button element (following this are all DOM manipulation)
                 const downloadButton = document.createElement('button');
                 downloadButton.id = 'download-button';
-                downloadButton.className = 'btn btn-warning';
+                downloadButton.className = 'btn';
                 // Create an image element for the button
                 const downloadImage = document.createElement('img');
                 downloadImage.src = '../static/images/download_icon.png';
