@@ -228,6 +228,34 @@
         </div>
     </nav>
 
+    <!-- Modal for Upload functionality -->
+    <div class="modal fade" id="uploadModal" tabindex="-2" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Weekly MergerMarket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    <h1>Excel File Upload to BigQuery</h1>
+                    <form id="uploadForm" enctype="application/x-www-form-urlencoded" style="margin-bottom: 10px;">
+                        <input type="file" id="fileInput" name="files" accept=".xls, .xlsx" multiple>
+                        <label for="tableIdInput" style="margin-left: 10px;">Table ID:</label>
+                        <input type="text" id="tableIdInput" name="tableId" disabled>
+                        <!-- <button type="submit">Upload</button> -->
+                    </form>
+                    <div id="previewArea">
+                        <!-- The content of the selected Excel file will be displayed here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="uploadModalConfirm">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal for confirmation of populating Market Scan -->
     <div class="modal fade" id="populateMSModal" tabindex="-2" aria-labelledby="populateMSModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-md">
@@ -355,6 +383,8 @@
 <!-- Add SheetJS library for Excel file handling -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 <!-- Bootstrap JS -->
+<!-- Include the XLSX.js library -->
+<script src="path/to/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 <!-- jQuery for making AJAX requests -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -505,7 +535,7 @@
                 $('.populate-MS-button').html(populateHtml);
 
                 // Append LLM button
-                LLMHtml = '<button id="LLM-button" class="btn"><img src="../static/images/LLM.png" alt="Run LLM Model" width="15" height="15"></button>';
+                LLMHtml = '<button id="LLM-button" class="btn"><img src="../static/images/brain.png" alt="Run LLM Model" width="15" height="15"></button>';
                 $('.LLM-button').html(LLMHtml);
 
                 // Update the table details placeholder and show it
@@ -899,6 +929,55 @@
         // Upon button click of the LLM button
         $('.LLM-button').on('click', function() {
             confirm("Confirm run LLM model?")
+        });
+
+        // Upon button click of the LLM button
+        $('.upload-button').on('click', function() {
+            $('#uploadModal').modal('show');
+        });
+        // Add an event listener to the file input element
+        $('#fileInput').on('change', function (e) {
+            const file = e.target.files[0];
+
+            // Check if a file is selected
+            if (file) {
+                // Initialize a FileReader to read the Excel file
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const data = e.target.result;
+                    // Parse the Excel data (you may need a library like XLSX.js)
+                    // This code assumes you're using XLSX.js. Make sure to include the library in your HTML.
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const tableData = XLSX.utils.sheet_to_json(sheet, { header: 1, range: 5 });
+
+                    // Create a table HTML to display the first 5 columns
+                    let tableHtml = '<table class="table" id="previewTable">';
+                    tableHtml += '<thead><tr>';
+                    for (let i = 0; i < 5; i++) {
+                        const cellValue = tableData[0][i] || '';
+                        tableHtml += `<th>${cellValue}</th>`;
+                    }
+                    tableHtml += '</tr></thead>';
+
+                    tableHtml += '<tbody>';
+                    for (let row = 1; row < tableData.length; row++) {
+                        tableHtml += '<tr>';
+                        for (let col = 0; col < 5; col++) {
+                            const cellValue = tableData[row][col] || '';
+                            tableHtml += `<td>${cellValue}</td>`;
+                        }
+                        tableHtml += '</tr>';
+                    }
+                    tableHtml += '</tbody></table>';
+
+                    // Display the table in the modal's preview area
+                    $('#previewArea').html(tableHtml);
+                };
+
+                // Read the file as binary
+                reader.readAsBinaryString(file);
+            }
         });
     });
 </script>
