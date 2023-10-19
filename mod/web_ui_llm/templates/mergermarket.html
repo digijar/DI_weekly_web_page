@@ -218,6 +218,7 @@
             <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
                 <div class="table-name"></div>
+                <div class="upload-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Upload Weekly MergerMarket"></div>
                 <div class="populate-MS-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Populate Market Scan"></div>
                 <div class="LLM-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Trigger LLM"></div>
                 <div class="add-row-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Add New Row"></div>
@@ -486,6 +487,10 @@
                 // Append table name
                 tableNameHtml = `<p style='margin-right: 10px; margin-top: 10px; color: white;'>${tableName}</p>`
                 $('.table-name').html(tableNameHtml);
+
+                // Append Save Changes button
+                uploadHtml = '<button id="upload-MM" class="btn"><img src="../static/images/upload.png" alt="Save Changes" width="15" height="15"></button>';
+                $('.upload-button').html(uploadHtml);
 
                 // Append Save Changes button
                 saveHtml = '<button id="save-changes" class="btn"><img src="../static/images/diskette.png" alt="Save Changes" width="15" height="15"></button>';
