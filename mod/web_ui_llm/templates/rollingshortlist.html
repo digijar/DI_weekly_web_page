@@ -388,6 +388,11 @@
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     $(document).ready(function() {
+        // Add a change event listener to the radio buttons with class "generate-AP-radio"
+        $('input.generate-AP-radio').on('change', function() {
+            // Uncheck all other radio buttons in the same group
+            $('input.generate-AP-radio').not(this).prop('checked', false);
+        });
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayRollingShortlist();
@@ -416,6 +421,7 @@
                 "Sub sector",
                 "Source",
                 " Target",
+                "Generate Asset Pack?",
                 "Populate Financials?",
                 "Business Description",
                 "Financials",
@@ -471,6 +477,9 @@
                         if (columnName === "Populate Financials?") {
                             // Add a new column with checkboxes
                             tableHtml += '<td data-col-name="Populate Financials?" contenteditable="false"><input type="checkbox" class="populate-financials-checkbox"></td>';
+                        } else if (columnName === "Generate Asset Pack?"){
+                            // Add a new column with radios
+                            tableHtml += `<td data-col-name="Generate Asset Pack?" contenteditable="false"><input type="radio" class="generate-AP-radio"></td>`;
                         } else {
                             const cellContent = row[columnName];
                             if (cellContent !== null) {
@@ -871,45 +880,36 @@
 
         // FOLLOWING functions is to connect to the Generate Asset Pack microservice
         // Add an event listener to the "Generate Asset Pack" button
-        $('.generate-assetpack-button').on('click', function() {
-            // Show the Generate Asset Pack modal
-            $('#generateAPModal').modal('show');
-        });
-        // Proceed button click event in the initial modal
-        $('#generateAssetPackButton').click(function () {
-            // Get the entered target name from the input field
-            const enteredNum = $('#targetNumInput').val();
-            // Check if the entered target name is valid
-            const isValidNum = isNumValid(enteredNum);
-            if (isValidNum) {
-                // Hide validation error message
-                $('#validationError').hide();
-                // Find the index of the entered Num in the "Num" column values
-                const rowIndex = $('#RS_table tbody td[data-col-name="Num"]').filter(function() {
-                    return $(this).text().trim() === enteredNum.toString();
-                }).closest('tr').index();
-                // Get the Target's name from the same row
-                const targetName = $('#RS_table tbody tr').eq(rowIndex).find('td[data-col-name=" Target"]').text().trim();
-                // Display the confirmation message
-                const confirmed = confirm(`You are going to generate an Asset Pack for ${targetName}`);
-                if (confirmed) {
-                    // Close the Individual modal
-                    $('#generateAPModal').modal('hide');
-                }
-            } else {
-                // Display validation error message
-                $('#validationError').show();
+        // Function to handle the generation of an asset pack
+        function generateAssetPack() {
+            const checkedRadio = $('#RS_table tbody input[type="radio"]:checked');
+            
+            if (checkedRadio.length === 0) {
+                alert("Please select a radio button to generate the asset pack.");
+                return;
             }
-        });
-        // Function to check if the entered Num in the Asset Pack Modal is valid
-        function isNumValid(Num) {
-            // Iterate through the values in the "Num" column of the table
-            const NumColumnValues = $('#RS_table tbody td[data-col-name="Num"]').map(function() {
-                return $(this).text().trim();
-            }).get();
-            // Check if the entered Num exists in the "Num" column values
-            return NumColumnValues.includes(Num.toString());
+            
+            const targetValue = checkedRadio.closest('tr').find('td[data-col-name=" Target"]').text().trim();
+            const numValue = checkedRadio.closest('tr').find('td[data-col-name="Num"]').text().trim();
+            
+            const confirmMessage = `Do you want to generate an asset pack for Target: ${targetValue} and Num: ${numValue}?`;
+            
+            if (confirm(confirmMessage)) {
+                // Perform the asset pack generation here
+                // You can make an AJAX call or execute any relevant code.
+                // Replace the comment with your actual code.
+            }
         }
+
+        // Attach a click event handler to the .generate-assetpack-button
+        $('.generate-assetpack-button').on('click', function() {
+            generateAssetPack();
+        });
+
+        $(document).on('change', '.generate-AP-radio', function() {
+            $('.generate-AP-radio').prop('checked', false); // Uncheck all radio buttons in the column
+            $(this).prop('checked', true); // Check the selected radio button
+        });
 
         // FOLLOWING functions is to connect to the Scraping of Financials microservice
         // Function to update the selected count based on checked checkboxes
@@ -997,8 +997,8 @@
         console.log(newTargetData);
         // Send the new row data to the server
         $.ajax({
-            url: 'http://127.0.0.1:5009/update',
-            type: 'POST',
+            url: 'http://127.0.0.1:5009/scrape',
+            type: 'GET',
             contentType: 'application/json',
             data: JSON.stringify(newTargetData),
             success: function(response) {

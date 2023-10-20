@@ -931,14 +931,13 @@
             confirm("Confirm run LLM model?")
         });
 
-        // Upon button click of the LLM button
+        // Upon button click of the Upload button
         $('.upload-button').on('click', function() {
             $('#uploadModal').modal('show');
         });
         // Add an event listener to the file input element
         $('#fileInput').on('change', function (e) {
             const file = e.target.files[0];
-
             // Check if a file is selected
             if (file) {
                 // Initialize a FileReader to read the Excel file
@@ -961,7 +960,7 @@
                     tableHtml += '</tr></thead>';
 
                     tableHtml += '<tbody>';
-                    for (let row = 1; row < tableData.length; row++) {
+                    for (let row = 1; row <= 5 && row < tableData.length; row++) {
                         tableHtml += '<tr>';
                         for (let col = 0; col < 5; col++) {
                             const cellValue = tableData[row][col] || '';
@@ -977,6 +976,30 @@
 
                 // Read the file as binary
                 reader.readAsBinaryString(file);
+            }
+
+            const fileInput = document.getElementById('fileInput');
+            const tableIdInput = document.getElementById('tableIdInput');
+
+            if (fileInput.files.length > 0) {
+                const uploadedFile = fileInput.files[0];
+                const fileName = uploadedFile.name;
+
+                // Extract the first word from the file name
+                const firstWord = fileName.split(/[_\s]/)[0];
+
+                // Get the current date in the format DD-MM-YY
+                const currentDate = new Date().toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit'
+                }).replace(/\//g, '-');
+
+                // Construct the dynamic table ID
+                const dynamicTableId = `${firstWord}_${currentDate}`;
+
+                // Fill the table ID input field
+                tableIdInput.value = dynamicTableId;
             }
         });
     });
