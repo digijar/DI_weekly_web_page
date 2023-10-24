@@ -118,7 +118,7 @@ async def retrieve_bigquery(row_num: float):
     if results[0]["other_info"] != None:
         other_info = results[0]["other_info"].split(";")
     else:
-        other_info = 'None'
+        other_info = 'nan'
 
     # Convert the results to a JSON response
     response_data = {
