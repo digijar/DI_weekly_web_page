@@ -13,3 +13,5 @@ python rollingshortlist.py in port 5004
 python webscraper_v*.py in port 5009
 
 python testAssetPackGeneration_v*.py in 5010
+
+python retrieve_bigquery_service_v*.py in 5011

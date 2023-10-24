@@ -27,9 +27,9 @@
             top: 0;
             z-index: 1000; /* Ensure Navbar is above other content */
         }
-        .navbar-nav {
+        /* .navbar-nav {
             margin-right: auto;
-        }
+        } */
 
         /* Styling the table displayed on the frontend */
         .table {
@@ -196,7 +196,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav nav-tabs me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav nav-tabs">
                     <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
                     </li>
@@ -215,9 +215,12 @@
                 </ul>
             </div>
 
+            <!-- Table name in the center of the navbar -->
+            <div class="table-name mx-auto"></div>
+
             <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
-                <div class="table-name"></div>
+                <!-- <div class="table-name"></div> -->
                 <div class="upload-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Upload Weekly MergerMarket"></div>
                 <div class="populate-MS-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Populate Market Scan"></div>
                 <div class="LLM-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Trigger LLM"></div>
@@ -284,6 +287,16 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
+                    <button type="button" id="togglePasteArea" class="btn btn-primary">Paste Data</button>
+                    <container id="paste-data-textarea" style="display: none;">
+                        <p>Paste excel data here:</p>  
+                        <textarea name="excel_data" style="width:250px;height:150px;"></textarea><br>
+                        <input type="button" onclick="javascript:generateTable()" value="Generate Table"/>
+                        <br><br>
+                            <p>Table data will appear below</p>
+                        <hr>
+                        <div id="excel_table"></div>
+                    </container>
                     <table class="table">
                         <thead>
                             <tr>
@@ -390,6 +403,35 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    function generateTable() {
+        var data = $('textarea[name=excel_data]').val();
+        console.log(data);
+
+        // Split the data into cells by tab character
+        var cells = data.split("\t");
+
+        var table = $('<table />');
+        var row = $('<tr />');
+
+        for (var x in cells) {
+            // Check for line breaks within the cell's content
+            if (cells[x].includes("\n")) {
+                var cellLines = cells[x].split("\n");
+                for (var i in cellLines) {
+                    row.append('<td>' + cellLines[i] + '</td>');
+                }
+            } else {
+                row.append('<td>' + cells[x] + '</td>');
+            }
+        }
+
+        table.append(row);
+
+        // Insert into DOM
+        $('#excel_table').html(table);
+    }
+
+
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
@@ -773,6 +815,11 @@
         }
 
         // FOLLOWING functions are for the Add Row function on the MergerMarket table
+        // Add an event listener for the "Paste Data" button
+        document.getElementById("togglePasteArea").addEventListener("click", function() {
+            var pasteDataTextarea = document.getElementById("paste-data-textarea");
+            pasteDataTextarea.style.display = "block";
+        });
         // Click event handler for the "Add Row" button
         $('.add-row-button').click(function() {
             $('#addRowModal').modal('show');
