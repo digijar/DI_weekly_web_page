@@ -284,13 +284,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
-                    <button type="button" id="togglePasteArea" class="btn btn-primary">Paste Data</button>
-                    <container id="paste-data-textarea" style="display: none;">
-                        <p>Paste excel data here:</p>  
-                        <textarea name="excel_data" style="width:250px;height:150px;"></textarea><br>
+                    <container id="paste-data-textarea">
+                        <p>Paste excel data here:</p>
+                        <textarea name="excel_data" style="width:600px;height:30px;"></textarea><br>
                         <button type="button" class="btn btn-success" onclick="javascript:generateTable()">Generate Table</button>
-                        <br><br>
-                            <p>Table data will appear below</p>
                         <hr>
                         <div id="excel_table"></div>
                     </container>
@@ -469,12 +466,6 @@
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     $(document).ready(function() {
-        // Attach a paste event listener to the first input element
-        $("#new-INRm").on("paste", function() {
-            // Call the generateTable function when content is pasted
-            generateTable();
-        });
-
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayMergerMarket();
@@ -854,11 +845,6 @@
         }
 
         // FOLLOWING functions are for the Add Row function on the MergerMarket table
-        // Add an event listener for the "Paste Data" button
-        document.getElementById("togglePasteArea").addEventListener("click", function() {
-            var pasteDataTextarea = document.getElementById("paste-data-textarea");
-            pasteDataTextarea.style.display = "block";
-        });
         // Click event handler for the "Add Row" button
         $('.add-row-button').click(function() {
             $('#addRowModal').modal('show');
