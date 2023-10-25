@@ -1,11 +1,10 @@
-import httpx
+import requests
 from fastapi import FastAPI, Request, Response
 from google.cloud import bigquery
 from json import JSONDecodeError
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import requests
 
 '''import webscraper libraries'''
 from selenium.webdriver.common.keys import Keys
@@ -399,7 +398,7 @@ def get_capitaliq (company, final_dict, service_instance):
 
         Input: name of company
         Output: dictionary of key:value - Account: Amount
-       
+
     '''    
     # Captial IQ
     # Login via SMU credentials
@@ -575,48 +574,67 @@ def get_company(company):
             service_instance.stop()
             return ({company: final_dict})
         
+@app.get("/")
+async def get_rolling_shortlist_data():
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
+    result = client.query(sql_query)
+
+    target_list = []
+    for row in result:
+        # print(row[' Target'])
+        # print(row['Business Description'])
+        target_list.append(row[' Target'])
+        # return "succeeded"
+
+    return JSONResponse(content = target_list)
+    # return row
 
 microservice_url = "http://127.0.0.1:5011"
 
-@app.get('/scrape')
-async def webscraping(request: Request):
+@app.post("/scrape")
+async def scrape_webscraping(request: Request):
     try:
         data = await request.json()
     except JSONDecodeError:
         return 'Invalid JSON data.'
 
-    # Extract the data you need, for example, the company_name
+    success = True
+
     try:
         for target_data in data:
             row_num = target_data.get('num')
             target = target_data.get('target')
-        print('Scraping...')
-        # Scrape data
-        scraped_data = get_company(target)
+            print (row_num)
+            print(target)
+            print('Scraping...')
+            # Scrape data
+            scraped_data = get_company(target)
 
-        # Package in JSON
-        update_data = {
-            "num": row_num,
-            "target": target,
-            "scraped_data": scraped_data
-        }
-        update_response = requests.post(f"{microservice_url}/update", json=update_data)
-        success = True
-        if update_response.status_code == 200:
-            # Check if the update was successful
-            update_result = update_response.json()
-            if update_result.get("success"):
-                print("Data update successful.")
+            # Package in JSON
+            update_data = {
+                "num": row_num,
+                "target": target,
+                "scraped_data": scraped_data
+            }
+            ## send back to retrieve to update
+            update_response = requests.post(f"{microservice_url}/update", json=update_data)
+            success = True
+            if update_response.status_code == 200:
+                # Check if the update was successful
+                update_result = update_response.json()
+                if update_result.get("success"):
+                    print("Data update successful.")
+                else:
+                    print("Data update failed.")
+                    success = False
+                return {"Data update successful?": success, "success": success}
             else:
-                print("Data update failed.")
-                success = False
-            return {"Data update successful?": success}
-        else:
-            print(f"Update request failed with status code: {update_response.status_code}")
+                print(f"Update request failed with status code: {update_response.status_code}")
     except Exception as e:
         print(e)
         success = False
+    return {"success": success}
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("webscraper_v17:app", host='127.0.0.1', port=5009, reload=True)
+    uvicorn.run("webscraper_forUI:app", host='127.0.0.1', port=5009, reload=True)
