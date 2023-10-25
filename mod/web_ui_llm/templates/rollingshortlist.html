@@ -997,7 +997,7 @@
         // Send the new row data to the server
         $.ajax({
             url: 'http://127.0.0.1:5009/scrape',
-            type: 'GET',
+            type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(newTargetData),
             success: function(response) {
