@@ -25,9 +25,6 @@
             top: 0;
             z-index: 1000; /* Ensure Navbar is above other content */
         }
-        .navbar-nav {
-            margin-right: auto;
-        }
 
         /* Styling the table displayed on the frontend */
         .table {
@@ -181,8 +178,8 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav nav-tabs me-auto mb-2 mb-lg-0">
+            <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-grow: 0;">
+                <ul class="navbar-nav nav-tabs">
                     <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
                     </li>
@@ -201,9 +198,11 @@
                 </ul>
             </div>
 
+            <!-- Table name in the center of the navbar -->
+            <div class="table-name mx-auto"></div>
+
             <!-- Button Container on the top right hand corner of the navbar -->
             <div class="button-container">
-                <div class="table-name"></div>
                 <div class="generate-assetpack-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Generate Asset Pack"></div>
                 <div class="add-row-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Add New Row"></div>
                 <div class="financials-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Webscrape Company Financials"></div>

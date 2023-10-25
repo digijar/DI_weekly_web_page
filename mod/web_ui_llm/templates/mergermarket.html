@@ -27,9 +27,6 @@
             top: 0;
             z-index: 1000; /* Ensure Navbar is above other content */
         }
-        /* .navbar-nav {
-            margin-right: auto;
-        } */
 
         /* Styling the table displayed on the frontend */
         .table {
@@ -195,7 +192,7 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display:contents !important;">
+            <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-grow: 0;">
                 <ul class="navbar-nav nav-tabs">
                     <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
@@ -291,7 +288,7 @@
                     <container id="paste-data-textarea" style="display: none;">
                         <p>Paste excel data here:</p>  
                         <textarea name="excel_data" style="width:250px;height:150px;"></textarea><br>
-                        <input type="button" onclick="javascript:generateTable()" value="Generate Table"/>
+                        <button type="button" class="btn btn-success" onclick="javascript:generateTable()">Generate Table</button>
                         <br><br>
                             <p>Table data will appear below</p>
                         <hr>
@@ -403,39 +400,81 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    // function generateTable() {
+    //     var data = $('textarea[name=excel_data]').val();
+
+    //     // Split the data into cells by tab character
+    //     var cells = data.split("\t");
+    //     console.log(cells.length);
+
+    //     var table = $('<table />');
+    //     var row = $('<tr />');
+
+    //     for (var x in cells) {
+    //         row.append('<td>' + cells[x] + '</td>')
+    //     }
+
+    //     table.append(row);
+
+    //     // Insert into DOM
+    //     $('#excel_table').html(table);
+    // }
+
     function generateTable() {
         var data = $('textarea[name=excel_data]').val();
-        console.log(data);
+        var rows = data.split("\t");
 
-        // Split the data into cells by tab character
-        var cells = data.split("\t");
+        // Remove the 7th position (at index 6) (Repeated Target variable)
+        rows.splice(6, 1);  // Removes 1 element at index 6
 
-        var table = $('<table />');
-        var row = $('<tr />');
+        if (rows.length > 0) {
+            var inputElements = $('#addRowModal input');
+            console.log(rows.length +" vs "+ inputElements.length);
+            if (rows.length === inputElements.length) {
+                for (var i = 0; i < rows.length; i++) {
+                    var inputValue = rows[i];
 
-        for (var x in cells) {
-            // Check for line breaks within the cell's content
-            if (cells[x].includes("\n")) {
-                var cellLines = cells[x].split("\n");
-                for (var i in cellLines) {
-                    row.append('<td>' + cellLines[i] + '</td>');
+                    // Check if the input field is a number field
+                    if (inputElements.eq(i).attr('type') === 'number') {
+                        // Parse the value as a number
+                        console.log("original num: "+inputValue)
+                        inputValue = parseFloat(inputValue);
+                        console.log("parsed num: "+inputValue);
+                    }
+
+                    // Check if the input field is a date field
+                    if (inputElements.eq(i).attr('type') === 'date') {
+                        // Convert the date string to the format expected by the date input
+                        var dateParts = inputValue.split('/');
+                        if (dateParts.length === 3) {
+                            inputValue = dateParts[2] + '-' + dateParts[0] + '-' + dateParts[1];
+                        }
+                        console.log("date: "+inputValue)
+                    }
+
+                    // Set the value of each input field in the modal
+                    inputElements.eq(i).val(inputValue);
                 }
             } else {
-                row.append('<td>' + cells[x] + '</td>');
+                alert('Number of columns in the pasted data does not match the number of input fields.');
             }
+        } else {
+            alert('No data pasted.');
         }
-
-        table.append(row);
-
-        // Insert into DOM
-        $('#excel_table').html(table);
     }
+
 
 
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     $(document).ready(function() {
+        // Attach a paste event listener to the first input element
+        $("#new-INRm").on("paste", function() {
+            // Call the generateTable function when content is pasted
+            generateTable();
+        });
+
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayMergerMarket();
