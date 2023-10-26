@@ -316,7 +316,11 @@
                         <tbody>
                             <tr>
                                 <!-- Input fields for each column (follows BigQuery's data types) -->
-                                <td><input type="number" id="new-num"></td>
+                                <!-- <td><input type="number" id="new-num"></td> -->
+                                <td>
+                                    <textarea name="excel_data" style="width:100px;height:20px;" oninput="generateTable()"></textarea>
+                                    <input type="number" id="new-num" style="display: none;">
+                                </td>
                                 <td><input type="date" id="new-capturedDate"></td>
                                 <td><input type="text" id="new-bpComments"></td>
                                 <td><input type="text" id="new-partnerDirector"></td>
@@ -383,10 +387,94 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
+    function generateTable() {
+        var data = $('textarea[name=excel_data]').val();
+        if (data.length < 4) {
+            return;
+        }
+        var rows = data.split("\t");
+
+        // Remove the 7th position (at index 6) (Repeated Target variable)
+        // rows.splice(6, 1);  // Removes 1 element at index 6
+
+        // Mapping of month abbreviations to numeric values
+        var monthMap = {
+            "Jan": "01",
+            "Feb": "02",
+            "Mar": "03",
+            "Apr": "04",
+            "May": "05",
+            "Jun": "06",
+            "Jul": "07",
+            "Aug": "08",
+            "Sep": "09",
+            "Oct": "10",
+            "Nov": "11",
+            "Dec": "12"
+        };
+
+        if (rows.length > 0) {
+            var inputElements = $('#addRowModal input');
+            console.log(rows.length +" vs "+ inputElements.length);
+            if (rows.length === inputElements.length) {
+                for (var i = 0; i < rows.length; i++) {
+                    var inputValue = rows[i];
+
+                    // Check if the input field is a number field
+                    if (inputElements.eq(i).attr('type') === 'number') {
+                        // Parse the value as a number
+                        console.log("original num: "+inputValue)
+                        inputValue = parseFloat(inputValue);
+                        console.log("parsed num: "+inputValue);
+                    }
+
+                    // Check if the input field is a date field
+                    if (inputElements.eq(i).attr('type') === 'date') {
+                        // Convert the date string to the format expected by the date input
+                        var dateParts = inputValue.split('-');
+                        if (dateParts.length === 3) {
+                            var day = parseInt(dateParts[0], 10); // Ensure day is treated as an integer
+                            var monthAbbr = dateParts[1];
+                            var year = dateParts[2];
+                            var month = monthMap[monthAbbr];
+                            if (month && day >= 1 && day <= 31) { // Ensure a valid day range
+                                day = day < 10 ? '0' + day : day; // Ensure two-digit format
+                                inputValue = '20' + year + '-' + month + '-' + day;
+                            }
+                        }
+                        console.log("date: "+inputValue)
+                    }
+                    inputElements.eq(i).val(inputValue);
+                }
+                // Hide the current textarea
+                $('textarea[name=excel_data]').hide();
+
+                // Show the input number field of the new-opportunityId field
+                $('#new-num').show();
+            } else {
+                alert('Number of columns in the pasted data does not match the number of input fields.');
+            }
+        } else {
+            alert('No data pasted.');
+        }
+    }
+
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     $(document).ready(function() {
+        $('#addRowModal').on('hidden.bs.modal', function () {
+            // Clear all input values
+            $('#addRowModal input').val('');
+            $('#addRowModal textarea').val('');
+            
+            // Show the textarea
+            $('textarea[name=excel_data]').show();
+            
+            // Hide the number input field
+            $('#new-num').hide();
+        });
+
         // Add a change event listener to the radio buttons with class "generate-AP-radio"
         $('input.generate-AP-radio').on('change', function() {
             // Uncheck all other radio buttons in the same group

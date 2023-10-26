@@ -284,13 +284,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="max-height: 400px; overflow-y: auto;">
-                    <container id="paste-data-textarea">
-                        <p>Paste excel data here:</p>
-                        <textarea name="excel_data" style="width:600px;height:30px;"></textarea><br>
-                        <button type="button" class="btn btn-success" onclick="javascript:generateTable()">Generate Table</button>
-                        <hr>
-                        <div id="excel_table"></div>
-                    </container>
                     <table class="table">
                         <thead>
                             <tr>
@@ -329,7 +322,10 @@
                         <tbody>
                             <tr>
                                 <!-- Input fields for each column (follows BigQuery's data types) -->
-                                <td><input type="number" id="new-opportunityId"></td>
+                                <td>
+                                    <textarea name="excel_data" style="width:100px;height:20px;" oninput="generateTable()"></textarea>
+                                    <input type="number" id="new-opportunityId" style="display: none;">
+                                </td>
                                 <td><input type="date" id="new-date"></td>
                                 <td><input type="text" id="new-INRm"></td>
                                 <td><input type="text" id="new-valueDesc"></td>
@@ -419,6 +415,9 @@
 
     function generateTable() {
         var data = $('textarea[name=excel_data]').val();
+        if (data.length < 9) {
+            return;
+        }
         var rows = data.split("\t");
 
         // Remove the 7th position (at index 6) (Repeated Target variable)
@@ -452,6 +451,11 @@
                     // Set the value of each input field in the modal
                     inputElements.eq(i).val(inputValue);
                 }
+                // Hide the current textarea
+                $('textarea[name=excel_data]').hide();
+
+                // Show the input number field of the new-opportunityId field
+                $('#new-opportunityId').show();
             } else {
                 alert('Number of columns in the pasted data does not match the number of input fields.');
             }
@@ -460,12 +464,21 @@
         }
     }
 
-
-
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
     $(document).ready(function() {
+        $('#addRowModal').on('hidden.bs.modal', function () {
+            // Clear all input values
+            $('#addRowModal input').val('');
+            $('#addRowModal textarea').val('');
+            
+            // Show the textarea
+            $('textarea[name=excel_data]').show();
+            
+            // Hide the number input field
+            $('#new-opportunityId').hide();
+        });
         // Show the loading animation upon loading of the MergerMarket table (time it takes to load the data from BigQuery)
         $('.loading-container').show();
         displayMergerMarket();
