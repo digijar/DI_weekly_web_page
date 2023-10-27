@@ -84,7 +84,7 @@ def gen_s4(presentation, content, bulleted_category_s4):
             - slide 4 / s4 - the slide we'll be working on in this function, 4th slide in
                 template slide deck
             - Shape - contain text in TextFrame.TextRange
-            - Paragraphs - contains lines that ends with \n in TextFrame.TextRange
+            - Paragraphs - contains lines that ends with \r\n in TextFrame.TextRange
         content: {dict}
             - "company_name" - {string}, name of company in interest
             - "date" - {string}, asset pack creation date, Day Month Year
@@ -164,7 +164,7 @@ def gen_s6(presentation, content, bulleted_category_s6):
             - slide 6 / s6 - the slide we'll be working on in this function, 4th slide in
                 template slide deck
             - Shape - contain text in TextFrame.TextRange
-            - Paragraphs - contains lines that ends with \n in TextFrame.TextRange
+            - Paragraphs - contains lines that ends with \r\n in TextFrame.TextRange
         content: {dict}
             - "company_name" - {string}, name of company in interest
             - "found_year" - {int}, year the company in interest is founded
@@ -188,6 +188,7 @@ def gen_s6(presentation, content, bulleted_category_s6):
         if s6.Shapes(shape).hasTextFrame:
 
             textframe = s6.Shapes(shape).TextFrame.TextRange
+            ruler = s6.Shapes(shape).TextFrame.Ruler
 
             for parag in range(len(textframe.Paragraphs())):
 
@@ -200,6 +201,9 @@ def gen_s6(presentation, content, bulleted_category_s6):
 
                     if information_category in content.keys() and information_category in bulleted_category_s6:
 
+                        # set indentation
+                        ruler.Levels(1).FirstMargin = 0
+                        ruler.Levels(1).LeftMargin = 10
                         # add empty paragraph
                         for paragraph in range(1,len(content[information_category])):
                             textframe.Paragraphs(paragraph).Text += "\r\n"
@@ -222,8 +226,8 @@ def gen_s6(presentation, content, bulleted_category_s6):
     return presentation
 
 
-# # # slide 7 - half-done (TODO check order of shape, hyperlink)
-def gen_s7(presentation,content,country_flag,country,color_hier):
+# # # slide 7
+def gen_s7(presentation,content,country_flag,countries,color_hier):
     """
     This function replaces all placeholder text in form of {information key} with respective
     values under the identical key in content dict.
@@ -235,7 +239,7 @@ def gen_s7(presentation,content,country_flag,country,color_hier):
     
     Inputs: 
         presentation: {PowerPoint.Presentations.Presentation}
-            - slide 7 / s7, slide 13 / s13 - the slide we'll be working on in this function, 4th slide in
+            - slide 7 / s7, slide 13 / s12 - the slide we'll be working on in this function, 4th slide in
                 template slide deck
             - Shape - contain text in TextFrame.TextRange
             - Characters - contain subset of TextFrame.TextRange
@@ -249,8 +253,8 @@ def gen_s7(presentation,content,country_flag,country,color_hier):
             - "region" - {list}, containing countries the company has set up offices in
         country_flag: {dict} 
             - in format of country_name{string}:image_id{int}
-            - image_id is unique in slide 13/s13
-        country: {dict}
+            - image_id is unique in slide 13/s12
+        countries: {dict}
             - in format of country_name{string}:shape_id{int}
             - shape_id is unique in slide 7/s7
 
@@ -260,7 +264,7 @@ def gen_s7(presentation,content,country_flag,country,color_hier):
                 with information key, in form of string or bulleted list
             - Shape(s) of country/ies filled with color in color_hier in stated order
     """
-    s13 = presentation.Slides(13)
+    s12 = presentation.Slides(12)
     s7 = presentation.Slides(7)
 
     # edit slide
@@ -299,35 +303,30 @@ def gen_s7(presentation,content,country_flag,country,color_hier):
                         start_ind.remove(ind_start)
                         end_ind.remove(ind_end)
 
-        # elif s7.Shapes(shape).hasTextFrame == False:
-    # edit map chart shapes to 
-    country_match = {"US":["United States of America", "America", "US", "USA"]}
-    reg = tuple(content["region"])+tuple([content["dominant_country"]])
-    reg = list(set(reg))
-    for city in reg:
-        if city in country_match["US"]:
-            target_country = "US"
-        else:
-            for co in country.keys():
-                if co.lower() in city.lower():
-                    target_country = co
-                    break
-        print(target_country)
-        # change fill of shape
-        if reg.index(city) == 0:
+    # edit map chart shapes
+    # create list of countries without duplicate
+    reg = []
+    for cty in content["region"]:
+        for co in countries.keys():
+            if co in cty:
+                reg.append(co)
+    reg = list(set(tuple(reg)))
+    print(reg)
+    # loop through reg list to fill shapes
+    for country in reg:
+        if reg.index(country) == 0:
             color_ind = 6
         else:
-            color_ind = reg.index(city) % 7 - 1
-        # color_ind = reg.index(city) % 7 
-        chosen_color = color_hier[color_ind][0] + color_hier[color_ind][1]*256 + color_hier[color_ind][2]*256**2
-        s7.Shapes(country[target_country]).Fill.ForeColor.RGB = chosen_color
+            color_ind = reg.index(country) % 7 -1
+        chosen_color = color_hier[color_ind][0]+color_hier[color_ind][1]*256 + color_hier[color_ind][2]*256**2
+        s7.Shapes(countries[country]).Fill.ForeColor.RGB = chosen_color
         # add in country flag
         # get position of the map shape for target country
-        left = s7.Shapes(country[target_country]).Left
-        top = s7.Shapes(country[target_country]).Top
-        if target_country in country_flag.keys():
+        left = s7.Shapes(countries[country]).Left
+        top = s7.Shapes(countries[country]).Top
+        if country in country_flag.keys():
             # copy and paste flag image from slide 13 to slide 7
-            s13.Shapes(country_flag[target_country]).Copy()
+            s12.Shapes(country_flag[country]).Copy()
             s7.Shapes.Paste()
             # the newly added image will always be last shape,
             # adjust the location of image
@@ -340,7 +339,8 @@ def gen_s7(presentation,content,country_flag,country,color_hier):
             tb = s7.Shapes.AddTable(1,1,left,table_top,table_width,table_height)
             tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Font.Size = 9
             tb.Table.Cell(1,1).Shape.Fill.ForeColor.RGB = 0 + 51*256 + 141*256**2
-            tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Text = target_country
+            tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Text = country
+            
     return presentation
 
 # # # slide 8 - done
@@ -377,6 +377,7 @@ def gen_s8(presentation, content, bulleted_category_s8, brand_counter=0):
     for shape in range(1,s8.Shapes.Count+1):
         if s8.Shapes(shape).hasTextFrame:
             textframe = s8.Shapes(shape).TextFrame.TextRange
+            ruler = s8.Shapes(shape).TextFrame.Ruler
             
             # locate placeholder text
             if textframe.Text.find("{") > -1 and textframe.Text.find("}") > -1:
@@ -387,6 +388,9 @@ def gen_s8(presentation, content, bulleted_category_s8, brand_counter=0):
                 information_category = textframe.Text[start_ind+1:end_ind]
 
                 if information_category in content.keys():
+                    # set indentation
+                    ruler.Levels(1).FirstMargin = 0
+                    ruler.Levels(1).LeftMargin = 10
                     pre_processed = textframe.Text
                     if information_category == "brand_name":
                         textframe.Text = content[information_category][brand_counter]
@@ -428,7 +432,7 @@ def gen_s9(presentation, content, bulleted_category_s9, brand_counter):
             - slide 9 / s9 - the slide we'll be working on in this function, 9th slide in
                 template slide deck
             - Shape - contain text in TextFrame.TextRange
-            - Paragraphs - contains lines that ends with \n in TextFrame.TextRange
+            - Paragraphs - contains lines that ends with \r\n in TextFrame.TextRange
         content: {dict}
             - "company_name" - {string}, name of company in interest
             - "date" - {string}, asset pack creation date, Day Month Year
@@ -461,6 +465,7 @@ def gen_s9(presentation, content, bulleted_category_s9, brand_counter):
         if s9.Shapes(shape).hasTextFrame:
 
             textframe = s9.Shapes(shape).TextFrame.TextRange
+            ruler = s9.Shapes(shape).TextFrame.Ruler
 
             # locate placeholder text in format of {information key}
             if textframe.Text.find("{") > -1 and textframe.Text.find("}") > -1:
@@ -470,6 +475,9 @@ def gen_s9(presentation, content, bulleted_category_s9, brand_counter):
                 information_category = textframe.Text[start_ind+1:end_ind]
 
                 if information_category in content.keys() and information_category in bulleted_category_s9:
+                    # set indentation
+                    ruler.Levels(1).FirstMargin = 0
+                    ruler.Levels(1).LeftMargin = 10
                     # input empty paragraphs
                     # input data
                     if information_category == "brand_desc":
@@ -513,7 +521,7 @@ def gen_s9(presentation, content, bulleted_category_s9, brand_counter):
 
 
 # # # slide 12
-def gen_s12(presentation,content,bulleted_category_s12):
+def gen_s11(presentation,content,bulleted_category_s11):
     """
     This function replaces all placeholder text in form of {information key} with respective
     values under the identical key in content dict.
@@ -525,11 +533,11 @@ def gen_s12(presentation,content,bulleted_category_s12):
             - slide 12/s12 - the slide we'll be working on for this function, 12th slide in
                 the template slide deck
             - Shapes - contains text in TextFrame.TextRange
-            - Paragraphs - contains lines that ends with \n in TextFrame.TextRange
+            - Paragraphs - contains lines that ends with \r\n in TextFrame.TextRange
         content: {dict}, information_category:data
             - "deal_Intelligence" - {list}, containing sentences from splitting of 
                 row['Deal_Intelligence_info']
-        bulleted_category_s12: {list}, contains information key {string} that are to be in bulleted list
+        bulleted_category_s11: {list}, contains information key {string} that are to be in bulleted list
             - deal_intelligence
 
     Returns:
@@ -537,13 +545,12 @@ def gen_s12(presentation,content,bulleted_category_s12):
             - Placeholder text in Shapes.TextFrame.TextRange.Text replaced by bulleted 
                 list
     """
-    s12 = presentation.Slides(12)
-    bulleted_category_s12 = ["deal_intelligence"]
-    for shape in range(1,s12.Shapes.Count+1):
+    s11 = presentation.Slides(11)
+    for shape in range(1,s11.Shapes.Count+1):
 
-        if s12.Shapes(shape).hasTextFrame:
+        if s11.Shapes(shape).hasTextFrame:
             # access the TextRange to access properties such as Text and Paragraphs
-            textframe = s12.Shapes(shape).TextFrame.TextRange
+            textframe = s11.Shapes(shape).TextFrame.TextRange
 
             # locate the placeholder text indicated by { and }
             if textframe.Text.find("{") > -1 and textframe.Text.find("}") > -1:
@@ -553,7 +560,7 @@ def gen_s12(presentation,content,bulleted_category_s12):
                 information_category = textframe.Text[start_ind+1:end_ind]
 
                 # condition for bulleted list
-                if information_category in content.keys() and information_category in bulleted_category_s12:
+                if information_category in content.keys() and information_category in bulleted_category_s11:
 
                     # insert empty paragraph
                     for paragraph in range(1,len(content[information_category])):
@@ -587,7 +594,7 @@ async def main(row_num:int):
     color_hier = [(0,51,141), (30,73,226), (172,234,255), (0,184,245), (12,35,60), (114,19,234), (253,52,156)]
     # country map shape dict, matching country names to the shape representing them
     # shapes 2, 18-24 can't be found
-    country = {
+    countries = {
         "South America":17,
         "US":13, 
         "Canada":14, 
@@ -694,6 +701,7 @@ async def main(row_num:int):
         "Kuwait":44, 
         "Israel":43, 
         "Lebanon":42, 
+        "Singapore":114
     }
 
     # country flage image dict, matching image to the respective country
@@ -801,7 +809,8 @@ async def main(row_num:int):
         "Saudi Arabia":96,
         "Kuwait":95,
         "Israel":94,
-        "Lebanon":93
+        "Lebanon":93,
+        "Singapore":107
     }
 
     try:
@@ -816,23 +825,23 @@ async def main(row_num:int):
         # # content dict
         # save all information to be inputted here for easy access
         content = {
-            "company_name":info["company_name"],
+            "company_name":"Company name not found",
             "month_year": datetime.today().strftime("%B %Y"),
             "date": datetime.today().strftime(r"%d %B %Y"),
-            "biz_desc": re.split("[.!?]\s{1,}", info["biz_desc"]),
-            "biz_summary": info["col_summary"]["Business Description"][2:len(info["col_summary"]["Business Description"])-1],
-            "deal_overview":info["col_summary"]["Deal Intelligence info"][2:len(info["col_summary"]["Deal Intelligence info"])-1],
+            "biz_desc": "NA",
+            "biz_summary": "NA",
+            "deal_overview":"NA",
             "sit_overview":[],
             "deal_stage":[],
             "deal_rationale":[],
-            "next_step":info["next_step"].split("\r\n"),
-            "deal_intelligence":info["deal_intelligence"].split("\r\n"),
-            "found_year":"No number found",
-            "dominant_country": info["dominant_country"].strip(),
-            "region":info["region"].split(";"),
-            "num_countries":len(info["region"].split(";")),
-            "employee_num": "No number found",
-            "link":info["link"],
+            "next_step":"NA",
+            "deal_intelligence":"NA",
+            "found_year":"NA",
+            "dominant_country": "NA",
+            "region":"NA",
+            "num_countries":"NA",
+            "employee_num": "NA",
+            "link":None,
             "brand_name":["Sample brand name 1", "Sample brand name 2", "Sample brand name 3"],
             "brand_desc":{
                 "Sample brand name 1": ["Sample brand description line","Sample brand description line"],
@@ -844,8 +853,48 @@ async def main(row_num:int):
             "corp_solution_desc":["Sample corporate solution line","Sample corporate solution line"]
         }
 
+        # saving info data into content dict
+        country_match = {"US":["United States of America", "America", "US", "USA"],
+                    "China":["China","Greater China"]}
+        special_split = ["col_summary","region","other_info"]
+        no_split = ["company_name","dominant_country","link"]
+        norm_split = ["biz_desc","deal_intelligence","next_step"]
+        for category in info.keys():
+            if info[category] != None:
+                if category in special_split:
+                    if category == "col_summary":
+                        content["deal_overview"] = info[category]["Deal Intelligence info"][2:len(info[category]["Deal Intelligence info"])-1]
+                        content["biz_summary"] = info[category]["Business Description"][2:len(info[category]["Business Description"])-1]
+                    elif category == "region":
+                        # get non-repeated list of country names
+                        temp_cty = info["region"].split(";")
+                        temp_cty.append(info["dominant_country"])
+                        for cty in temp_cty:
+                            for country_name in country_match.values():
+                                if cty in country_name:
+                                    temp_cty[temp_cty.index(cty)] = list(country_match.keys())[list(country_match.values()).index(country_name)]
+                        content[category] = list(set(tuple(temp_cty)))
+                        content["num_countries"] = len(content[category])
+                    elif category == "other_info":
+                        for inf in info["other_info"]:
+                            inform = inf.split(":")
+                            if inform[0] == "yearFounded":
+                                content["found_year"] = inform[1]
+                            elif inform[0] == "numOfEmployees":
+                                content["employee_num"] = inform[1]
+                    else:
+                        content[category] = [info[category]]
+                elif category in no_split:
+                    content[category] = info[category]
+                elif category in norm_split:
+                    content[category] = re.split("[.!?]\s{1,}", info[category])
+                    
+        print(content)
         # # # text processing
-        to_be_processed = info["deal_intelligence"].split("\r\n")
+        to_be_processed = []
+        for sentence in content["deal_intelligence"]:
+            to_be_processed += sentence.split("\r\n")
+        print(to_be_processed)
 
         # remove empty string, useless lines
         # get index of elements to be removed
@@ -873,23 +922,23 @@ async def main(row_num:int):
 
         # keywords for sorting sentences
         kw = {
-            "sit_overview":["launch","strategic review", "strategic","review", "shortlisted", "looking to", "sell", "business expansion", "expand", "mandate", "acquisition","acquired"],
+            "sit_overview":["launch","strategic review", "strategic","review", "shortlisted", "looking to", "sell", "business expansion", "expand", "mandate", "acquisition","acquired","invested","sales"],
             "deal_stage":["initial public offering", "expected to", "in a process", "plans to", "plan to", "early stage", "decision"],
-            "deal_rationale":["funding used for", "funding would be used for", "investment", "funding", "focus on", "approach"]
+            "deal_rationale":["funding used for", "funding would be used for", "investment", "funding", "focus on", "approach","potential","ebitda","gbp"]
         }
 
         # processing and sort Deal_intelligence sentences
-        for l in range(len(to_be_processed)):
+        for line in range(len(to_be_processed)):
             for k in kw.values():
                 # get key aka the information category with values in k
                 information_category = list(kw.keys())[list(kw.values()).index(k)]
                 # # for each word in k (containing all relevant words/phrases)
                 for string in k:
-                    if string in to_be_processed[l].lower():
-                        content[information_category].append(to_be_processed[l])
+                    if string in to_be_processed[line].lower():
+                        content[information_category].append(to_be_processed[line])
         # remove duplicates in list
         for information_category in kw:
-            content[information_category] = list(set(content[information_category]))
+            content[information_category] = list(set(tuple(content[information_category])))
 
         # further process other info and store in content dict
         other_info = info["other_info"]
@@ -900,16 +949,17 @@ async def main(row_num:int):
             elif info[0] == "yearFounded":
                 content["found_year"] = info[1]
 
-        
         # open an instance of PowerPoint
         ppt_app = comtypes.client.CreateObject("PowerPoint.Application")
         # open template asset pack slides
-        template_path = "../../../results/input/templates/AssetPackSample_v0.55.pptx"
+        # template_path = "../../../results/input/templates/AssetPackSample_v0.57.pptx"
+        template_path = "results/input/AssetPackSample_v0.57.pptx"
         template_abs_path = os.path.abspath(template_path)
         presentation_duplicate = ppt_app.Presentations.Open(template_abs_path)
 
         # # save slide, open duplicated slide
-        save_path = """../../../results/output/asset_packs/{company_name}-AssetPack.pptx""".format(company_name=content["company_name"])
+        # save_path = """../../../results/output/asset_packs/{company_name}-AssetPack.pptx""".format(company_name=content["company_name"])
+        save_path = """results/output/{company_name}-AssetPack.pptx""".format(company_name=content["company_name"])
         save_abs_path = os.path.abspath(save_path)
         presentation_duplicate.SaveAs(save_abs_path)
         presentation = presentation_duplicate
@@ -917,22 +967,22 @@ async def main(row_num:int):
         # editing content in slides
         presentation = gen_s1(presentation,content)
         bulleted_category_s4 = ["sit_overview","deal_stage","deal_rationale","biz_desc","next_step"]
-        presentation = gen_s4(presentation,content,bulleted_category_s4)
+        presentation = gen_s4(presentation, content, bulleted_category_s4)
         bulleted_category_s6 = ["biz_desc"]
         presentation = gen_s6(presentation,content,bulleted_category_s6)
-        presentation = gen_s7(presentation,content,country_flag,country,color_hier)
+        presentation = gen_s7(presentation,content,country_flag,countries,color_hier)
         bulleted_category_s8 = ["brand_desc"]
         presentation, brand_counter = gen_s8(presentation, content, bulleted_category_s8)
         bulleted_category_s9 = ["brand_desc","social_work_desc","sch_network_desc","corp_solution_desc"]
         presentation = gen_s9(presentation, content, bulleted_category_s9, brand_counter)
-        bulleted_category_s12 = ["deal_intelligence"]
-        presentation = gen_s12(presentation,content,bulleted_category_s12)
+        bulleted_category_s11 = ["deal_intelligence"]
+        presentation = gen_s11(presentation,content,bulleted_category_s11)
 
         success = True
     except Exception as e:
         print(e)
         success = False
-    return success
+    return {"success": success}
 
 
 if __name__ == '__main__':

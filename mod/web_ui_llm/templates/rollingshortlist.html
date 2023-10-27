@@ -966,8 +966,6 @@
         });
 
         // FOLLOWING functions is to connect to the Generate Asset Pack microservice
-        // Add an event listener to the "Generate Asset Pack" button
-        // Function to handle the generation of an asset pack
         function generateAssetPack() {
             const checkedRadio = $('#RS_table tbody input[type="radio"]:checked');
             
@@ -982,9 +980,26 @@
             const confirmMessage = `Do you want to generate an asset pack for Target: ${targetValue} and Num: ${numValue}?`;
             
             if (confirm(confirmMessage)) {
-                // Perform the asset pack generation here
-                // You can make an AJAX call or execute any relevant code.
-                // Replace the comment with your actual code.
+                console.log("creating AP...")
+                $.ajax({
+                    url: `http://127.0.0.1:5010/apgen/${numValue}`,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    // data: JSON.stringify(newRowData),
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Asset Pack created successfully.');
+                            setTimeout(function(){
+                                window.location.reload();
+                            }, 10000); // Reload the table after a successful update
+                        } else {
+                            alert('Error creating Asset Pack.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error creating Asset Pack.');
+                    }
+                });
             }
         }
 
