@@ -106,186 +106,7 @@ def get_orbis (company, final_dict, service_instance):
         company_input = wait.until(EC.presence_of_element_located(company_input_locator))
         company_input.send_keys(company)
 
-        # wait for suggestions to load, up till 5 seconds
-        suggestions_locator = (By.CLASS_NAME, 'suggestions')
-        suggestions = wait.until(EC.presence_of_element_located(suggestions_locator))
-
-        time.sleep(3)
-        # wait for first suggestion to load, up till 5 seconds
-        first_locator = (By.CSS_SELECTOR, 'a[role="link"]')
-        first_three_suggestions = orbis.find_elements(By.CSS_SELECTOR, 'a[role="link"]')[:3]
         
-        # click on first suggestion
-        first_three_suggestions[0].click()
-    except:
-        # no suggestions found, close browser and return None
-        orbis.quit()
-        return final_dict
-    
-    # initalise bvd_id list and fill with top 3 suggestions
-    bvd_list = []
-    for x in first_three_suggestions:
-        bvd_id = x.get_attribute('data-parambvdid')
-        bvd_list.append(bvd_id)
-    
-    # initialise list to collect data of top 3 suggestions
-    top_3_suggestions =[]
-    
-    # start with first bvd_id
-    bvd_id = bvd_list[0]
-    
-    # define subfunction to collect data from each of the suggestions
-    def orbis_info (bvd_id):
-        # nonlocal orbis to use the same browser
-        nonlocal orbis
-        
-        # initalise Other_info str with bvd_id
-        asset_pack_str = "Orbis_BvdID:" + bvd_id + ";"
-
-        # initalise raw list with bvd_Id in asset_pack to collect the data
-        raw = [('Asset Pack', asset_pack_str)]
-    
-        # check if navigation sidebar is closed, if it is, click on it to open
-        try:
-            sidebar_locator = (By.CLASS_NAME, 'side-expanded--closed')
-            sidebar = wait.until(EC.presence_of_element_located(sidebar_locator))
-            sidebar.click()
-        except:
-            pass
-    
-        # Get Region - Find chapter search input
-        search_locator = (By.CSS_SELECTOR,'input[name="titleInput"]')
-        search = wait.until(EC.presence_of_element_located(search_locator))
-        search.send_keys("Geographic footprint")
-
-        # find search suggestions for geographic footprint
-        geographic = orbis.find_element(By.CSS_SELECTOR,'li[class="search-result section-inBook candidate"]').find_element(By.CSS_SELECTOR,'a[title="Geographic footprint"]')
-        geographic.click()
-    
-        # check if its in table form, if not, click to change to table form
-        try:
-            list_toggle_locator = (By.CSS_SELECTOR,'a[aria-label="Show list"]')
-            list_toggle = wait.until(EC.presence_of_element_located(list_toggle_locator))
-            list_toggle.click()
-        except:
-            pass
-    
-        time.sleep(2)
-        # wait for countries table to load
-        countries_locator = (By.CSS_SELECTOR,'table[class="ETBL ownership-table heatmap-table"]')
-        countries_table = wait.until(EC.presence_of_element_located(countries_locator))
-
-        soup = BeautifulSoup(orbis.page_source, 'lxml')
-    
-        try:
-            countries = soup.find_all('td', {'class':'ownership-table__no-left-border ownership-table--left heatmap-table__element'})
-            region_str = ''
-            for x in countries:
-                region_str += x.get_text(strip=True) + ';'
-            if len(region_str) != 0:
-                region_str = region_str[:-1]
-                raw.append(('Target Region', region_str))
-        except:
-            pass
-    
-        # Find the header element using its attributes to expand
-        header_locator = (By.CSS_SELECTOR,'a[title="Financials"]')
-        header = wait.until(EC.presence_of_element_located(header_locator))
-
-        # check if header expanded, if no then click on it
-        if header.get_attribute('aria-expanded') == 'false':
-            element = header.find_element(By.CLASS_NAME, 'menu__view-selection-item-icon')
-            # expand header
-            element.click()
-
-        # find global standard format and click on it    
-        element = orbis.find_element(By.CSS_SELECTOR,'a[title="Global standard format"]')
-        element.click()
-        time.sleep(5)
-        # use beautiful soup to parse the page 
-        soup = BeautifulSoup(orbis.page_source, 'lxml')
-
-        # try to find the financial data table
-        datatable = soup.find('table',{'class':'FinDataTable'})
-
-        # if no table is found, there is no data - close browser and return None
-        if datatable is None:
-            return dict(raw)
-
-        # find latest date and get it in the format of DD MMM YYYY e.g. 27 Jul 2023
-        date_obj = soup.find('table',{'class':'FinDataTable'}).find('tr', {'class': 'finHead'}).find('p').get_text(strip=True).split('<br/>')[0].replace('USD', '').replace('th', '').strip()
-        try:
-            date = datetime.strptime(date_obj, '%d/%m/%Y').strftime('%d %b %Y')
-        except:
-            date = datetime.strptime(date_obj, '%Y').strftime('%Y')
-
-        # find all rows in datatable
-        table = datatable.find_all('tr', class_=['fin1', 'fin2', 'fin3'])
-
-        # initialise list to collect the tuples of data
-        raw.append(('Date', date))
-
-        # initalise other info string
-        other_info_str = ''
-
-        # initalise other info accounts to be put into the string
-        other_info_list = ['COGS', 'Gross Profit']
-
-        na_values = ['-', '0', 'n.a.']
-
-        # iterate through rows
-        for x in table:
-            # find all account headers, which are in the first cell position, index 0
-            label_element = x.find_all('td')
-            label = label_element[0].find('div').get_text(strip=True).replace("∟", "").strip()
-
-            # check if it is one of the metrics mapped in the mapping dictionary
-            if label in orbis_mapping:
-                label = orbis_mapping[label]
-            else:
-                continue
-
-            # get value of account and convert to float 
-            # for Orbis, the value in 2nd cell position is the value from the latest recording date, index 1
-            value = label_element[1].get_text(strip=True)
-            if value in na_values:
-                continue
-            else:
-                float_value = float(value.replace(',',''))
-
-            if label not in other_info_list:
-                # append the account label and value to list
-                raw.append((label, float_value))
-            else:
-                other_info_str += label + ': ' + str(float_value) + ', '
-
-        # append other info to list if its not empty
-        if len(raw) >1:
-            other_info_str += 'Units: USD Thousands (k)'
-
-        if other_info_str != '':
-            raw.append(('Other Info', other_info_str))
-        # convert list to dictionary
-        result = dict(raw)
-        
-        return result
-    
-    # get result of 1st suggestion
-    r1 = orbis_info(bvd_id)
-    top_3_suggestions.append(r1)
-    
-    print(top_3_suggestions)
-    
-    # define subfunction to search next 2 bvd_ids
-    def new_bvdID_search(bvd_id):
-        nonlocal orbis
-        homepage = 'https://orbis-r1-bvdinfo-com.libproxy.smu.edu.sg/'
-        # go to homepage
-        orbis.get(homepage)
-        # wait for search box to be found, up till 5 seconds
-        company_input_locator = (By.ID, 'search')
-        company_input = wait.until(EC.presence_of_element_located(company_input_locator))
-        company_input.send_keys(bvd_id)
 
         # wait for suggestions to load, up till 5 seconds
         suggestions_locator = (By.CLASS_NAME, 'suggestions')
@@ -296,36 +117,131 @@ def get_orbis (company, final_dict, service_instance):
         first_locator = (By.CSS_SELECTOR, 'a[role="link"]')
         first = wait.until(EC.presence_of_element_located(first_locator))
         first.click()
+    except:
+        # no suggestions found, close browser and return None
+        orbis.quit()
+        return final_dict
+    
+    # check if navigation sidebar is closed, if it is, click on it to open
+    try:
+        sidebar_locator = (By.CLASS_NAME, 'side-expanded--closed')
+        sidebar = wait.until(EC.presence_of_element_located(sidebar_locator))
+        sidebar.click()
+    except:
+        pass
+    
+    # Get Region - Find chapter search input
+    search_locator = (By.CSS_SELECTOR,'input[name="titleInput"]')
+    search = wait.until(EC.presence_of_element_located(search_locator))
+    search.send_keys("Geographic footprint")
+    
+    # find search suggestions for geographic footprint
+    geographic = orbis.find_element(By.CSS_SELECTOR,'li[class="search-result section-inBook candidate"]').find_element(By.CSS_SELECTOR,'a[title="Geographic footprint"]')
+    geographic.click()
+    
+    # check if its in table form, if not, click to change to table form
+    try:
+        list_toggle_locator = (By.CSS_SELECTOR,'a[aria-label="Show list"]')
+        list_toggle = wait.until(EC.presence_of_element_located(list_toggle_locator))
+        list_toggle.click()
+    except:
+        pass
+    
+    time.sleep(2)
+    # wait for countries table to load
+    countries_locator = (By.CSS_SELECTOR,'table[class="ETBL ownership-table heatmap-table"]')
+    countries_table = wait.until(EC.presence_of_element_located(countries_locator))
+    
+    soup = BeautifulSoup(orbis.page_source, 'lxml')
+    
+    try:
+        countries = soup.find_all('td', {'class':'ownership-table__no-left-border ownership-table--left heatmap-table__element'})
+        region_str = ''
+        for x in countries:
+            region_str += x.get_text(strip=True) + ';'
+        if len(region_str) != 0:
+            region_str = region_str[:-1]
+            final_dict['Target Region'] = region_str
+    except:
+        pass
+    
+    # Find the header element using its attributes to expand
+    header_locator = (By.CSS_SELECTOR,'a[title="Financials"]')
+    header = wait.until(EC.presence_of_element_located(header_locator))
+    
+    # check if header expanded, if no then click on it
+    if header.get_attribute('aria-expanded') == 'false':
+        element = header.find_element(By.CLASS_NAME, 'menu__view-selection-item-icon')
+        # expand header
+        element.click()
 
-        # checking if popup for replace search appear
-        try:
-            time.sleep(5)
-            popup = orbis.find_element(By.CSS_SELECTOR,'div[class="popup popup__dialog new-search"]')
-            buttons = popup.find_element(By.CSS_SELECTOR,'div[class="button popup__buttons"]')
-            ok_button = buttons.find_element(By.CSS_SELECTOR,'a[class="button submit ok"]')
-            ok_button.click()
-        except:
-            pass
+    # find global standard format and click on it    
+    element = orbis.find_element(By.CSS_SELECTOR,'a[title="Global standard format"]')
+    element.click()
+    time.sleep(5)
+    # use beautiful soup to parse the page 
+    soup = BeautifulSoup(orbis.page_source, 'lxml')
     
-    for i in bvd_list[1:]:
-        new_bvdID_search(i)
-        res = orbis_info(i)
-        top_3_suggestions.append(res)
-        print(res)
+    # try to find the financial data table
+    datatable = soup.find('table',{'class':'FinDataTable'})
+
+    # if no table is found, there is no data - close browser and return None
+    if datatable is None:
+        orbis.quit()
+        return final_dict
+
+    # find latest date and get it in the format of DD MMM YYYY e.g. 27 Jul 2023
+    date_obj = soup.find('table',{'class':'FinDataTable'}).find('tr', {'class': 'finHead'}).find('p').get_text(strip=True).split('<br/>')[0].replace('USD', '').replace('th', '').strip()
+    date = datetime.strptime(date_obj, '%d/%m/%Y').strftime('%d %b %Y')
+
+    # find all rows in datatable
+    table = datatable.find_all('tr', class_=['fin1', 'fin2', 'fin3'])
+
+    # initialise list to collect the tuples of data
+    raw = [('Date', date)]
+
+    # initalise other info string
+    other_info_str = ''
+
+    # initalise other info accounts to be put into the string
+    other_info_list = ['COGS', 'Gross Profit']
+
+    na_values = ['-', '0', 'n.a.']
+
+    # iterate through rows
+    for x in table:
+        # find all account headers, which are in the first cell position, index 0
+        label_element = x.find_all('td')
+        label = label_element[0].find('div').get_text(strip=True).replace("∟", "").strip()
+
+        # check if it is one of the metrics mapped in the mapping dictionary
+        if label in orbis_mapping:
+            label = orbis_mapping[label]
+        else:
+            continue
+
+        # get value of account and convert to float 
+        # for Orbis, the value in 2nd cell position is the value from the latest recording date, index 1
+        value = label_element[1].get_text(strip=True)
+        if value in na_values:
+            continue
+        else:
+            float_value = float(value.replace(',',''))
+
+        if label not in other_info_list:
+            # append the account label and value to list
+            raw.append((label, float_value))
+        else:
+            other_info_str += label + ': ' + str(float_value) + ', '
+
+    # append other info to list if its not empty
+    if len(raw) >1:
+        other_info_str += 'Units: USD Thousands (k)'
     
-    print(top_3_suggestions)
-    
-    # select best result based on number of items and order of search results
-    # initialise max_len
-    max_len = 0
-    for x in top_3_suggestions:
-        if len(x) > max_len:
-            max_len = len(x)
-    
-    for y in top_3_suggestions:
-        if len(y) == max_len:
-            result = y
-            break
+    if other_info_str != '':
+        raw.append(('Other Info', other_info_str))
+    # convert list to dictionary
+    result = dict(raw)
     
     final_dict.update(result)
     
@@ -438,12 +354,9 @@ def get_data_capital(table):
                 result[capitaliq_mapping[x["Account"]]] = float(x["Value"].replace(',', ''))
             else:
                 other_info_str += capitaliq_mapping[x["Account"]] + ': ' + str(float(x["Value"].replace(',', ''))) + ', '
-    try:
-        latest_date = data[0]['Filing Date']
-        latest_date_formatted = datetime.strptime(latest_date, "%b-%d-%Y").strftime("%d %b %Y")
-        result['Date'] = latest_date_formatted
-    except:
-        pass
+    latest_date = data[0]['Filing Date']
+    latest_date_formatted = datetime.strptime(latest_date, "%b-%d-%Y").strftime("%d %b %Y")
+    result['Date'] = latest_date_formatted
     
     # as long as there is more than just date - ie there are financials, add in 
     if len(result) >1:
@@ -485,7 +398,7 @@ def get_capitaliq (company, final_dict, service_instance):
 
         Input: name of company
         Output: dictionary of key:value - Account: Amount
-       
+
     '''    
     # Captial IQ
     # Login via SMU credentials
@@ -512,173 +425,123 @@ def get_capitaliq (company, final_dict, service_instance):
         suggestions = wait.until(EC.presence_of_element_located(suggestions_locator))
 
         time.sleep(5)
-        first_3_suggestions = suggestions.find_elements(By.CSS_SELECTOR,'a[class="acResultLink"]')[:3]
+        first = suggestions.find_element(By.CSS_SELECTOR,'a[class="acResultLink"]')
+        link = first.get_attribute('href')
 
-        # initialise list of links
-        links = []
-        # append each link to list
-        for x in first_3_suggestions:
-            link = x.get_attribute('href')
-            links.append(link)
+
+        capitaliq.get(link)
     except:
         capitaliq.quit()
         return final_dict
+            
+    # Get company id
+    current_url = capitaliq.current_url
+    parsed_url = urlparse(current_url)
+    query_params = parse_qs(parsed_url.query)
+
+    # Get the value of the 'companyId' parameter
+    company_id = query_params.get('companyId', [''])[0]
+    if company_id =='':
+        capitaliq.quit()
+        return final_dict
     
-    top_3_suggestions = []
+    # Get numOfEmployees, yearFounded and Business Description
     
-    # define subfunction to get info
+    # wait for presence of table, wait for it to load finish
+    tables_locator = (By.CSS_SELECTOR, 'table[class="cTblListBody"]')
+    tables = wait.until(EC.presence_of_element_located(tables_locator))
     
-    def capiq_info(link):
-        nonlocal capitaliq
-
-        capitaliq.get(link)
-        parsed_url = urlparse(link)
-        query_params = parse_qs(parsed_url.query)
-
-        company_id = query_params.get('companyId', [''])[0]
-        if company_id =='':
-            print('no comp id')
-    #         return {}
-
-        asset_info = 'CapIQ_CompanyID:'+company_id+';'
-
-        # initialise raw dict to store data
-        raw = {}
-
-        # Get numOfEmployees, yearFounded and Business Description, webSite
-
-        # wait for presence of table, wait for it to load finish
-        tables_locator = (By.CSS_SELECTOR, 'table[class="cTblListBody"]')
-        tables = wait.until(EC.presence_of_element_located(tables_locator))
-
-        time.sleep(3)
-        soup = BeautifulSoup(capitaliq.page_source, 'lxml')
-        info = soup.find_all('td', id=['numOfEmployees', 'yearFounded', 'webSite'])
-
-        na_values = ['-', 'n.a.', '']
-
-        for i in info:
-            label = i.get('id')
-            val = i.get_text(strip=True)
-            if val not in na_values:
-                if label == 'webSite':
-                    raw['Website'] = val
-                else:
-                    asset_info+= label + ':' + val + ';'
-
-        if asset_info != '':        
-            raw['Asset Pack'] = asset_info[:-1]
-
-        biz_desc_table = soup.find_all('table', {'class':'cTblListBody'})[1]
-        biz_desc = biz_desc_table.find('span').get_text(strip=True)
-
-        if biz_desc != '':
-            raw['Business Description'] = biz_desc
-
-        statement = ['IncomeStatement', 'Capitalization']
-        url = 'https://www.capitaliq.com/CIQDotNet/Financial/{}.aspx?companyId={}'
-
-        result = {}
-
-        for i in statement:
-            capitaliq.get(url.format(i, company_id))
-            time.sleep(2)
-
-            # change currency and units to USD and Thousands (k)
-            # look for more options expander
-            try:
-                more_options_locator = (By.ID, '_pageHeader_ShowMoreLink')
-                more_options = wait.until(EC.presence_of_element_located(more_options_locator))
-                more_options.click()
-
-                # change to USD
-                currency_dropdown_locator = (By.CSS_SELECTOR, 'select[id="_pageHeader_fin_dropdown_currency"]')
-                currency_dropdown = wait.until(EC.presence_of_element_located(currency_dropdown_locator))
-
-                currency_select = Select(currency_dropdown)
-                currency_select.select_by_visible_text('US Dollar')
-
-                # change to Thousands (k)
-                units_dropdown_locator = (By.CSS_SELECTOR, 'select[id="_pageHeader_fin_dropdown_units"]')
-                units_dropdown = wait.until(EC.presence_of_element_located(units_dropdown_locator))
-
-                units_select = Select(units_dropdown)
-                units_select.select_by_visible_text('Thousands (k)')
-
-                # submit filters
-                submit_btn = capitaliq.find_elements(By.CSS_SELECTOR,'td[class=cTblFuncTxt]')[-2].find_element(By.CSS_SELECTOR, 'input[type="submit"]')
-                submit_btn.click()
-            except:
-                break
-
-            time.sleep(5)
-            soup = BeautifulSoup(capitaliq.page_source, 'lxml')
-            datatable = soup.find('table',{'class':'FinancialGridView'})
-            if datatable is None:
-                print('datatable empty')
-                break
-
-            row = datatable.find_all('tr')
-            table = []
-            for x in row:
-                data = x.find_all('a',{'class':'clickThru'})
-                if data:
-                    table.append(data[-1])
-            try:
-                res = get_data_capital(table)
-                raw.update(res)
-            except:
-                pass
-
-        return raw
+    time.sleep(3)
+    soup = BeautifulSoup(capitaliq.page_source, 'lxml')
+    info = soup.find_all('td', id=['numOfEmployees', 'yearFounded', 'webSite'])
     
-    for x in links:
-        res = capiq_info(x)
-        top_3_suggestions.append(res)
+    asset_info = ''
+    na_values = ['-', 'n.a.', '']
+
+    for i in info:
+        label = i.get('id')
+        val = i.get_text(strip=True)
+        if val not in na_values:
+            if label == 'webSite':
+                final_dict['Website'] = val
+            else:
+                asset_info+= label + ':' + val + ';'
+            
+    if asset_info != '':        
+        final_dict['Asset Pack'] = asset_info[:-1]
+
+    biz_desc_table = soup.find_all('table', {'class':'cTblListBody'})[1]
+    biz_desc = biz_desc_table.find('span').get_text(strip=True)
+    
+    if biz_desc != '':
+        final_dict['Business Description'] = biz_desc
+    
         
-    # select best result based on number of items and order of search results
-    # initialise max_len
-    max_len = 0
-    for x in top_3_suggestions:
-        if len(x) > max_len:
-            max_len = len(x)
+    statement = ['IncomeStatement', 'Capitalization']
+    url = 'https://www.capitaliq.com/CIQDotNet/Financial/{}.aspx?companyId={}'
+        
+    result = {}
 
-    for y in top_3_suggestions:
-        if len(y) == max_len:
-            result = y
-            break
+    for i in statement:
+        capitaliq.get(url.format(i, company_id))
+        time.sleep(2)
+        
+        # change currency and units to USD and Thousands (k)
+        # look for more options expander
+        more_options_locator = (By.ID, '_pageHeader_ShowMoreLink')
+        more_options = wait.until(EC.presence_of_element_located(more_options_locator))
+        more_options.click()
+        
+        # change to USD
+        currency_dropdown_locator = (By.CSS_SELECTOR, 'select[id="_pageHeader_fin_dropdown_currency"]')
+        currency_dropdown = wait.until(EC.presence_of_element_located(currency_dropdown_locator))
+
+        currency_select = Select(currency_dropdown)
+        currency_select.select_by_visible_text('US Dollar')
+        
+        # change to Thousands (k)
+        units_dropdown_locator = (By.CSS_SELECTOR, 'select[id="_pageHeader_fin_dropdown_units"]')
+        units_dropdown = wait.until(EC.presence_of_element_located(units_dropdown_locator))
+
+        units_select = Select(units_dropdown)
+        units_select.select_by_visible_text('Thousands (k)')
+        
+        # submit filters
+        submit_btn = capitaliq.find_elements(By.CSS_SELECTOR,'td[class=cTblFuncTxt]')[-2].find_element(By.CSS_SELECTOR, 'input[type="submit"]')
+        submit_btn.click()
+        
+        time.sleep(5)
+        soup = BeautifulSoup(capitaliq.page_source, 'lxml')
+        datatable = soup.find('table',{'class':'FinancialGridView'})
+        if datatable is None:
+            capitaliq.quit()
+            return final_dict
+        row = datatable.find_all('tr')
+        table = []
+        for x in row:
+            data = x.find_all('a',{'class':'clickThru'})
+            if data:
+                table.append(data[-1])
+        res = get_data_capital(table)
+        result.update(res)
     
-    # extract out website and business description, which will be updated no matter what, Asset pack will be updated separately
-    keys_to_extract = ["Website", "Business Description", "Asset Pack"]
-
-    # only website and business description are updated immediately
-    new_cols_dict = {key: result[key] for key in keys_to_extract[:2]}
-    final_dict.update(new_cols_dict)
-
-    # addon asset pack in final_dict
-    if 'Asset Pack' in final_dict:
-        final_dict['Asset Pack'] += result['Asset Pack']
-    else:
-        final_dict['Asset Pack'] = result['Asset Pack']
-
-    # extract out remaining columns for date checking
-    checking_dict = {key: result[key] for key in result if key not in keys_to_extract}
-
-    cap_iq_date = checking_dict['Date']
+    if len(result) == 0:
+        capitaliq.quit()
+        return final_dict
+    
+    cap_iq_date = result['Date']
     if 'Date' in final_dict:
         orbis_date = final_dict['Date']
+        
+        cap_iq_date = datetime.strptime(cap_iq_date, "%d %b %Y")
+        orbis_date = datetime.strptime(orbis_date, "%d %b %Y")
 
-        try:
-            cap_iq_date = datetime.strptime(cap_iq_date, "%d %b %Y")
-            orbis_date = datetime.strptime(orbis_date, "%d %b %Y")
-            if cap_iq_date >orbis_date:
-                final_dict.update(checking_dict)
-        except:
-            pass
+        if cap_iq_date >orbis_date:
+            final_dict.update(result)
     else:
-        final_dict.update(checking_dict)
+        final_dict.update(result)
     capitaliq.quit()
-
+    
     return final_dict
 
 def get_company(company):
