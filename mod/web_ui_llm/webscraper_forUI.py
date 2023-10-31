@@ -537,8 +537,7 @@ def get_capitaliq (company, final_dict, service_instance):
 
         company_id = query_params.get('companyId', [''])[0]
         if company_id =='':
-            print('no comp id')
-    #         return {}
+            return {}
 
         asset_info = 'CapIQ_CompanyID:'+company_id+';'
 
@@ -578,8 +577,6 @@ def get_capitaliq (company, final_dict, service_instance):
         statement = ['IncomeStatement', 'Capitalization']
         url = 'https://www.capitaliq.com/CIQDotNet/Financial/{}.aspx?companyId={}'
 
-        result = {}
-
         for i in statement:
             capitaliq.get(url.format(i, company_id))
             time.sleep(2)
@@ -609,14 +606,14 @@ def get_capitaliq (company, final_dict, service_instance):
                 submit_btn = capitaliq.find_elements(By.CSS_SELECTOR,'td[class=cTblFuncTxt]')[-2].find_element(By.CSS_SELECTOR, 'input[type="submit"]')
                 submit_btn.click()
             except:
-                break
+                continue
 
             time.sleep(5)
             soup = BeautifulSoup(capitaliq.page_source, 'lxml')
             datatable = soup.find('table',{'class':'FinancialGridView'})
             if datatable is None:
                 print('datatable empty')
-                break
+                continue
 
             row = datatable.find_all('tr')
             table = []
