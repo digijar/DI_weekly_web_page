@@ -169,7 +169,7 @@
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
             <!-- Back Button -->
-            <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
+            <a class="navbar-brand" href="/" data-bs-toggle="tooltip" data-bs-title="Go Back">
                 <img src="../static/images/left-arrow.png" alt="Back" width="15" height="15">
             </a>
 
@@ -180,11 +180,11 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-grow: 0;">
                 <ul class="navbar-nav nav-tabs">
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
-                        <a class="nav-link" href="/preview" style="color: white;">Preview Tables</a>
+                        <a class="nav-link" href="/" style="color: white;">Preview Tables</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket" style="color: white;">MM</a>
@@ -571,27 +571,31 @@
                             const cellContent = row[columnName];
                             if (cellContent !== null) {
                                 if (cellContent.length > 30) {
-                                    const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
-                                    tableHtml += `
-                                        <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                            <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                            <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-scrollable">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body"></div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
-                                                            <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                        </div>
-                                                    </div>
+                                const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
+                                // Create a modal div that's not inside the table
+                                tableHtml += `<td data-col-name="${columnName}" data-full-content='${cellContent}'>${cellContent.substring(0, 30)}
+                                    <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                </td>`;
+
+                                // Append the modal to the body of the document
+                                const modalHtml = `
+                                    <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body"></div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                 </div>
                                             </div>
-                                        </td>
-                                        `;
-                                } else {
+                                        </div>
+                                    </div>
+                                `;
+                                $('body').append(modalHtml); // Append modal to the body
+                            } else {
                                     tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
                                 }
                             } else {

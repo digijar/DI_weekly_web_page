@@ -227,7 +227,7 @@ def gen_s6(presentation, content, bulleted_category_s6):
 
 
 # # # slide 7
-def gen_s7(presentation,content,country_flag,countries,color_hier):
+def gen_s7(presentation,content,country_flag,countries,color_hier,continent):
     """
     This function replaces all placeholder text in form of {information key} with respective
     values under the identical key in content dict.
@@ -257,6 +257,9 @@ def gen_s7(presentation,content,country_flag,countries,color_hier):
         countries: {dict}
             - in format of country_name{string}:shape_id{int}
             - shape_id is unique in slide 7/s7
+        color_hier: {}
+
+        continent: {dict}
 
     Returns:
         presentation: {PowerPoint.Presentations.Presentation}
@@ -305,42 +308,79 @@ def gen_s7(presentation,content,country_flag,countries,color_hier):
 
     # edit map chart shapes
     # create list of countries without duplicate
-    reg = []
+    reg = {
+    }
+    country_reg = []
     for cty in content["region"]:
         for co in countries.keys():
             if co in cty:
-                reg.append(co)
-    reg = list(set(tuple(reg)))
+                country_reg.append(co)
+        for cont in continent.keys():
+            if cty == cont:
+                reg[cont] = continent[cont]
+    reg["countries"] = list(set(tuple(country_reg)))  
     print(reg)
-    # loop through reg list to fill shapes
-    for country in reg:
-        if reg.index(country) == 0:
-            color_ind = 6
+
+    for r in reg.keys():
+        print(r)
+        if r == "countries":
+            # loop through reg list to fill shapes
+            for country in reg["countries"]:
+                if reg["countries"].index(country) == 0:
+                    color_ind = 6
+                else:
+                    color_ind = reg["countries"].index(country) % 7 -1
+                chosen_color = color_hier[color_ind][0]+color_hier[color_ind][1]*256 + color_hier[color_ind][2]*256**2
+                s7.Shapes(countries[country]).Fill.ForeColor.RGB = chosen_color
+                # add in country flag
+                # get position of the map shape for target country
+                left = s7.Shapes(countries[country]).Left
+                top = s7.Shapes(countries[country]).Top
+                if country in country_flag.keys():
+                    # copy and paste flag image from slide 13 to slide 7
+                    s12.Shapes(country_flag[country]).Copy()
+                    s7.Shapes.Paste()
+                    # the newly added image will always be last shape,
+                    # adjust the location of image
+                    s7.Shapes(len(s7.Shapes)).Left = left
+                    s7.Shapes(len(s7.Shapes)).Top = top
+                    # add name below flag, in 1x1 table
+                    table_top = top + s7.Shapes(len(s7.Shapes)).Height
+                    table_width = 40
+                    table_height = 20
+                    tb = s7.Shapes.AddTable(1,1,left,table_top,table_width,table_height)
+                    tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Font.Size = 9
+                    tb.Table.Cell(1,1).Shape.Fill.ForeColor.RGB = 0 + 51*256 + 141*256**2
+                    tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Text = country
         else:
-            color_ind = reg.index(country) % 7 -1
-        chosen_color = color_hier[color_ind][0]+color_hier[color_ind][1]*256 + color_hier[color_ind][2]*256**2
-        s7.Shapes(countries[country]).Fill.ForeColor.RGB = chosen_color
-        # add in country flag
-        # get position of the map shape for target country
-        left = s7.Shapes(countries[country]).Left
-        top = s7.Shapes(countries[country]).Top
-        if country in country_flag.keys():
-            # copy and paste flag image from slide 13 to slide 7
-            s12.Shapes(country_flag[country]).Copy()
-            s7.Shapes.Paste()
-            # the newly added image will always be last shape,
-            # adjust the location of image
-            s7.Shapes(len(s7.Shapes)).Left = left
-            s7.Shapes(len(s7.Shapes)).Top = top
-            # add name below flag, in 1x1 table
-            table_top = top + s7.Shapes(len(s7.Shapes)).Height
-            table_width = 40
-            table_height = 20
-            tb = s7.Shapes.AddTable(1,1,left,table_top,table_width,table_height)
-            tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Font.Size = 9
-            tb.Table.Cell(1,1).Shape.Fill.ForeColor.RGB = 0 + 51*256 + 141*256**2
-            tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Text = country
+            color_ind = (len(reg["countries"]) +list(reg.keys()).index(r)) % 7
+            chosen_color = color_hier[color_ind][0]+color_hier[color_ind][1]*256 + color_hier[color_ind][2]*256**2
+            for ctys in reg[r]:
+                s7.Shapes(countries[ctys]).Fill.ForeColor.RGB = chosen_color
+            left = s7.Shapes(countries[reg[r][0]]).Left
+            top = s7.Shapes(countries[reg[r][0]]).Top
+            if r in country_flag.keys():
+                s12.Shapes(country_flag[r]).Copy()
+                s7.Shapes.Paste()
+                # the newly added image will always be last shape,
+                # adjust the location of image
+                s7.Shapes(len(s7.Shapes)).Left = left
+                s7.Shapes(len(s7.Shapes)).Top = top
+                # add name below flag, in 1x1 table
+                table_top = top + s7.Shapes(len(s7.Shapes)).Height
+                table_width = 40
+                table_height = 20
+                tb = s7.Shapes.AddTable(1,1,left,table_top,table_width,table_height)
+                tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Font.Size = 9
+                tb.Table.Cell(1,1).Shape.Fill.ForeColor.RGB = 0 + 51*256 + 141*256**2
+                tb.Table.Cell(1,1).Shape.TextFrame.TextRange.Text = r
+
+
+
             
+            
+
+         
     return presentation
 
 # # # slide 8 - done
@@ -404,7 +444,6 @@ def gen_s8(presentation, content, bulleted_category_s8, brand_counter=0):
                         for parag in range(len(content[information_category][content["brand_name"][brand_counter]])):
                             pre_processed = textframe.Paragraphs(parag+1).Text
                             textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Type = 1
-                            # textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Character = 8226
                             textframe.Paragraphs(parag+1).Font.Color.RGB = 0
                             textframe.Paragraphs(parag+1).ParagraphFormat.SpaceAfter = 0
                             textframe.Paragraphs(parag+1).ParagraphFormat.SpaceBefore = 0
@@ -487,7 +526,7 @@ def gen_s9(presentation, content, bulleted_category_s9, brand_counter):
 
                         for parag in range(len(content["brand_desc"][content["brand_name"][brand_counter]])):
                             # state that it is unordered list, using the bullet character with unicode-hex 2014
-                            #   (8226 in decimal)
+                            # (8226 in decimal)
                             textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Type = 1
                             textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Character = 8226
                             textframe.Paragraphs(parag+1).Text = content["brand_desc"][content["brand_name"][brand_counter]][parag]
@@ -530,7 +569,7 @@ def gen_s11(presentation,content,bulleted_category_s11):
 
     Inputs: 
         presentation: {PowerPoint.Presentations.Presentation}
-            - slide 12/s12 - the slide we'll be working on for this function, 12th slide in
+            - slide 11/s11 - the slide we'll be working on for this function, 12th slide in
                 the template slide deck
             - Shapes - contains text in TextFrame.TextRange
             - Paragraphs - contains lines that ends with \r\n in TextFrame.TextRange
@@ -547,29 +586,41 @@ def gen_s11(presentation,content,bulleted_category_s11):
     """
     s11 = presentation.Slides(11)
     for shape in range(1,s11.Shapes.Count+1):
-
         if s11.Shapes(shape).hasTextFrame:
-            # access the TextRange to access properties such as Text and Paragraphs
             textframe = s11.Shapes(shape).TextFrame.TextRange
 
-            # locate the placeholder text indicated by { and }
             if textframe.Text.find("{") > -1 and textframe.Text.find("}") > -1:
-                start_ind = textframe.Text.index("{")
-                end_ind = textframe.Text.index("}")
-                # get information key
-                information_category = textframe.Text[start_ind+1:end_ind]
 
-                # condition for bulleted list
-                if information_category in content.keys() and information_category in bulleted_category_s11:
+                # find all instance of placeholder text
+                start_ind = [x.start() for x in re.finditer("{",textframe.Text)]
+                end_ind = [y.start() for y in re.finditer("}",textframe.Text)]
 
-                    # insert empty paragraph
-                    for paragraph in range(1,len(content[information_category])):
-                        textframe.Paragraphs(paragraph).Text += "\r\n"
-                    # input into the empty paragraph line by line
-                    for parag in range(len(content[information_category])):
-                        textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Type = 1
-                        textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Character = 8226
-                        textframe.Paragraphs(parag+1).Text = content[information_category][parag]
+                while len(start_ind) >= 1:
+                    pre_processed = textframe.Text
+                    ind_start = start_ind[0]
+                    ind_end = end_ind[0]
+
+                    information_category = pre_processed[ind_start+1:ind_end]
+
+                    # change text
+                    if information_category in content.keys() and information_category not in bulleted_category_s11:
+                        textframe.Text = pre_processed.replace("{"+information_category+"}",str(content[information_category]))
+                    elif information_category in content.keys() and information_category in bulleted_category_s11:
+                        # insert empty paragraph
+                        for paragraph in range(1,len(content[information_category])):
+                            textframe.Paragraphs(paragraph).Text += "\r\n"
+                        # input into the empty paragraph line by line
+                        for parag in range(len(content[information_category])):
+                            textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Type = 1
+                            textframe.Paragraphs(parag+1).ParagraphFormat.Bullet.Character = 8226
+                            textframe.Paragraphs(parag+1).Text = content[information_category][parag]
+
+                        
+                    start_ind = [x.start() for x in re.finditer("{",textframe.Text)]
+                    end_ind = [y.start() for y in re.finditer("}",textframe.Text)]
+                    if ind_start in start_ind:
+                        start_ind.remove(ind_start)
+                        end_ind.remove(ind_end)
     return presentation
 
 @app.get("/apgen/{row_num}")
@@ -631,8 +682,8 @@ async def main(row_num:int):
         "Cuba":19, 
         "Bahamas":20, 
         "Lesser Antilles":22, 
-        "Malaysia":110, 
-        "Indonesia":109,  
+        "Malaysia":109, 
+        "Indonesia":108,  
         "Papua New Guinea":28, 
         "New Zealand":24, 
         "Australia":23, 
@@ -734,7 +785,7 @@ async def main(row_num:int):
         "Malaysia":35, 
         "Indonesia":31, 
         "Papua New Guinea":42, 
-        "New Zealand":38, # check
+        "New Zealand":38,
         "Australia":7, 
         "Brunei":13, 
         "Montenegro":37, 
@@ -810,7 +861,9 @@ async def main(row_num:int):
         "Kuwait":95,
         "Israel":94,
         "Lebanon":93,
-        "Singapore":107
+        "Singapore":107,
+        "Europe":108,
+        "SOUTHEAST Asia":109
     }
 
     try:
@@ -850,25 +903,41 @@ async def main(row_num:int):
             },
             "social_work_desc":["Sample social work line", "Sample social work line"],
             "sch_network_desc":["Sample school network line","Sample school network line"],
-            "corp_solution_desc":["Sample corporate solution line","Sample corporate solution line"]
+            "corp_solution_desc":["Sample corporate solution line","Sample corporate solution line"],
+            "capital_id":"NA",
+            "orbis_id":"NA"
         }
 
         # saving info data into content dict
         country_match = {"US":["United States of America", "America", "US", "USA"],
-                    "China":["China","Greater China"]}
+                    "China":["China","Greater China"],
+                    "SOUTHEAST Asia":["ASEAN"]}
+        continent = {
+            "Europe":["Albania","Andorra","Austria","Belarus","Belgium","Bosnia and Herzegovina","Bulgaria",
+                      "Croatia","Czechia","Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Iceland",
+                      "Ireland","Italy","Latvia","Liechtenstein","Lithuania","Luxembourg","Moldova","Montenegro",
+                      "Netherlands","North Macedonia","Norway","Poland","Portugal","Romania","Russia","Serbia",
+                      "Slovakia","Slovenia","Spain","Sweden","Switzerland","Greenland","Ukraine","United Kingdom","Armenia","Azerbaijan","Cyprus","Georgia","Turkey"],
+            "SOUTH Asia":["Bangladesh","Bhutan","India","Nepal","Pakistan","Sri Lanka","Afghanistan"],
+            "SOUTHEAST Asia":["Brunei","Cambodia","Philippines","Indonesia","Laos","Malaysia","Myanmar","Singapore","Thailand","Vietnam"],
+            "EAST Asia":["China","Japan","Mongolia","Taiwan"],
+            "CENTRAL Asia":["Kazakhstan","Kyrgyzstan","Tajikistan","Turkimenistan","Uzbekistan"],
+            "Middle East":["Saudi Arabia","Bahrain","United Arab Emirates","Yemen",
+                           "Iraq","Iran","Israel","Jordan","Kuwait","Lebanon","Oman","Qatar","Syria"]
+        }
         special_split = ["col_summary","region","other_info"]
-        no_split = ["company_name","dominant_country","link"]
+        no_split = ["company_name","link","dominant_country"]
         norm_split = ["biz_desc","deal_intelligence","next_step"]
         for category in info.keys():
             if info[category] != None:
                 if category in special_split:
                     if category == "col_summary":
-                        content["deal_overview"] = info[category]["Deal Intelligence info"][2:len(info[category]["Deal Intelligence info"])-1]
-                        content["biz_summary"] = info[category]["Business Description"][2:len(info[category]["Business Description"])-1]
+                        content["deal_overview"] = info[category]["Deal Intelligence info"][2:]
+                        content["biz_summary"] = info[category]["Business Description"][2:]
                     elif category == "region":
                         # get non-repeated list of country names
                         temp_cty = info["region"].split(";")
-                        temp_cty.append(info["dominant_country"])
+                        temp_cty += info["dominant_country"].split(", ")
                         for cty in temp_cty:
                             for country_name in country_match.values():
                                 if cty in country_name:
@@ -948,17 +1017,19 @@ async def main(row_num:int):
                 content["employee_num"] = info[1]
             elif info[0] == "yearFounded":
                 content["found_year"] = info[1]
+            elif info[0] == "CapIQ_CompanyID":
+                content["capital_id"] = info[1]
+            elif info[0] == "Orbis_BvdID":
+                content["orbis_id"] = info[1]
 
         # open an instance of PowerPoint
         ppt_app = comtypes.client.CreateObject("PowerPoint.Application")
         # open template asset pack slides
-        # template_path = "../../../results/input/templates/AssetPackSample_v0.57.pptx"
         template_path = "results/input/AssetPackSample_v0.57.pptx"
         template_abs_path = os.path.abspath(template_path)
         presentation_duplicate = ppt_app.Presentations.Open(template_abs_path)
 
         # # save slide, open duplicated slide
-        # save_path = """../../../results/output/asset_packs/{company_name}-AssetPack.pptx""".format(company_name=content["company_name"])
         save_path = """results/output/{company_name}-AssetPack.pptx""".format(company_name=content["company_name"])
         save_abs_path = os.path.abspath(save_path)
         presentation_duplicate.SaveAs(save_abs_path)
@@ -970,7 +1041,7 @@ async def main(row_num:int):
         presentation = gen_s4(presentation, content, bulleted_category_s4)
         bulleted_category_s6 = ["biz_desc"]
         presentation = gen_s6(presentation,content,bulleted_category_s6)
-        presentation = gen_s7(presentation,content,country_flag,countries,color_hier)
+        presentation = gen_s7(presentation,content,country_flag,countries,color_hier,continent)
         bulleted_category_s8 = ["brand_desc"]
         presentation, brand_counter = gen_s8(presentation, content, bulleted_category_s8)
         bulleted_category_s9 = ["brand_desc","social_work_desc","sch_network_desc","corp_solution_desc"]

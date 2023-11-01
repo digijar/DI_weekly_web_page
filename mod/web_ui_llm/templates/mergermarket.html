@@ -184,7 +184,7 @@
         <div class="container-fluid">
 
             <!-- Back Button -->
-            <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
+            <a class="navbar-brand" href="/" data-bs-toggle="tooltip" data-bs-title="Go Back">
                 <img src="../static/images/left-arrow.png" alt="Back" width="15" height="15">
             </a>
 
@@ -194,11 +194,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-grow: 0;">
                 <ul class="navbar-nav nav-tabs">
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
-                        <a class="nav-link" href="/preview" style="color: white;">Preview Tables</a>
+                        <a class="nav-link" href="/" style="color: white;">Preview Tables</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket">MM</a>
@@ -219,8 +219,8 @@
             <div class="button-container">
                 <!-- <div class="table-name"></div> -->
                 <div class="upload-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Upload Weekly MergerMarket"></div>
-                <div class="populate-MS-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Populate Market Scan"></div>
                 <div class="LLM-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Trigger LLM"></div>
+                <div class="populate-MS-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Populate Market Scan"></div>
                 <div class="add-row-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Add New Row"></div>
                 <div class="save-button" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Save Changes"></div>
                 <div class="download-button" data-bs-toggle="tooltip" data-bs-title="Download MergerMarket into Excel"></div>
@@ -393,26 +393,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    // function generateTable() {
-    //     var data = $('textarea[name=excel_data]').val();
-
-    //     // Split the data into cells by tab character
-    //     var cells = data.split("\t");
-    //     console.log(cells.length);
-
-    //     var table = $('<table />');
-    //     var row = $('<tr />');
-
-    //     for (var x in cells) {
-    //         row.append('<td>' + cells[x] + '</td>')
-    //     }
-
-    //     table.append(row);
-
-    //     // Insert into DOM
-    //     $('#excel_table').html(table);
-    // }
-
     function generateTable() {
         var data = $('textarea[name=excel_data]').val();
         if (data.length < 9) {
@@ -563,25 +543,29 @@
                         if (cellContent !== null) {
                             if (cellContent.length > 30) {
                                 const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
-                                tableHtml += `
-                                    <td data-col-name="${columnName}" data-full-content='${cellContent}'>${cellContent.substring(0, 30)}
-                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-scrollable">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body"></div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
-                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                    </div>
+                                // Create a modal div that's not inside the table
+                                tableHtml += `<td data-col-name="${columnName}" data-full-content='${cellContent}'>${cellContent.substring(0, 30)}
+                                    <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                </td>`;
+
+                                // Append the modal to the body of the document
+                                const modalHtml = `
+                                    <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body"></div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </td>
-                                    `;
+                                    </div>
+                                `;
+                                $('body').append(modalHtml); // Append modal to the body
                             } else {
                                 if (columnName === "Opportunity_ID") {
                                     tableHtml += `<td data-col-name="${columnName}" contenteditable="true" style="background-color: ${cellColor};">${cellContent}</td>`;
@@ -1006,19 +990,33 @@
         // Upon button click of the 'Populate MS' button
         $('#populateMSModalConfirm').on('click', function() {
             // Add logic for populating Market Scan here
-
+            console.log("Populating Market Scan with available deals...")
             // Close the confirmation modal
             $('#populateMSModal').modal('hide');
         });
 
         // Upon button click of the LLM button
         $('.LLM-button').on('click', function() {
-            confirm("Confirm run LLM model?")
+            if (confirm("Confirm run LLM model?")) {
+                console.log("LLM model running for MergerMarket dataset...")
+                setTimeout(function(){
+                    window.location.reload();
+                }, 2000); // Reload the table after a successful update
+            }
         });
 
         // Upon button click of the Upload button
         $('.upload-button').on('click', function() {
             $('#uploadModal').modal('show');
+        });
+
+        // Upon button click of the Upload button
+        $('#uploadModalConfirm').on('click', function() {
+            console.log("uploading weekly excel to BigQuery...")
+            $('#uploadModal').modal('hide');
+            setTimeout(function(){
+                window.location.reload();
+            }, 2000); // Reload the table after a successful update
         });
         // Add an event listener to the file input element
         $('#fileInput').on('change', function (e) {

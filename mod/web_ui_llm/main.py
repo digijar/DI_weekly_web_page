@@ -104,7 +104,7 @@ async def upload(file: List[UploadFile], tableIdInput: Annotated[str, Form()]):
 def model_testing(request: Request):
     return templates.TemplateResponse("model_testing.html", {"request":request})
 
-@app.get("/preview", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def preview(request: Request):
     return templates.TemplateResponse("preview.html", {"request":request})
 

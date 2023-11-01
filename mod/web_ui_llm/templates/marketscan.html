@@ -167,7 +167,7 @@
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
             <!-- Back Button -->
-            <a class="navbar-brand" href="/preview" data-bs-toggle="tooltip" data-bs-title="Go Back">
+            <a class="navbar-brand" href="/" data-bs-toggle="tooltip" data-bs-title="Go Back">
                 <img src="../static/images/left-arrow.png" alt="Back" width="15" height="15">
             </a>
 
@@ -177,11 +177,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent" style="flex-grow: 0;">
                 <ul class="navbar-nav nav-tabs">
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="/upload" style="color: white;">Upload</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
-                        <a class="nav-link" href="/preview" style="color: white;">Preview Tables</a>
+                        <a class="nav-link" href="/" style="color: white;">Preview Tables</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/mergermarket" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="MergerMarket" style="color: white;">MM</a>
@@ -547,25 +547,29 @@
                         else if (cellContent !== null) {
                             if (cellContent.length > 30) {
                                 const uniqueID = `modal-${columnName.trim().substring(0, 3)}`;
-                                tableHtml += `
-                                    <td data-col-name="${columnName}" data-full-content="${cellContent}">${cellContent.substring(0, 30)}
-                                        <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
-                                        <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-scrollable">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body"></div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
-                                                        <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
-                                                    </div>
+                                // Create a modal div that's not inside the table
+                                tableHtml += `<td data-col-name="${columnName}" data-full-content='${cellContent}'>${cellContent.substring(0, 30)}
+                                    <span><button class="expand-button" data-bs-toggle="modal" data-bs-target="#${uniqueID}">...</button></span>
+                                </td>`;
+
+                                // Append the modal to the body of the document
+                                const modalHtml = `
+                                    <div class="modal fade" id="${uniqueID}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-scrollable">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body"></div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
+                                                    <button type="button" id="save-changes" class="btn btn-primary">Save changes</button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </td>
-                                    `;
+                                    </div>
+                                `;
+                                $('body').append(modalHtml); // Append modal to the body
                             } else {
                                 tableHtml += `<td data-col-name="${columnName}" contenteditable="true">${cellContent}</td>`;
                             }
@@ -612,17 +616,32 @@
                             <div class="slicer">
                                 <div class="slicer-header">${columnName}</div>
                                 <div class="slicer-options">
-                        `
+                        `;
+
                         for (const value of uniqueValues) {
                             slicerHTML += `
                                 <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
-                            `
+                            `;
                         }
+
+                        // if (columnName === "Picks") {
+                        //     slicerHTML += `
+                        //         <label><input type="checkbox" class="slicer-checkbox" value="Checked">Checked</label>
+                        //         <label><input type="checkbox" class="slicer-checkbox" value="Unchecked">Unchecked</label>
+                        //     `;
+                        // } else {
+                        //     for (const value of uniqueValues) {
+                        //         slicerHTML += `
+                        //             <label><input type="checkbox" class="slicer-checkbox" value="${value}">${value}</label>
+                        //         `;
+                        //     }
+                        // }
+
                         slicerHTML += `
                                 </div>
                             </div>
                         </div>
-                        `
+                        `;
                     }
                 }
                 slicerContainer.innerHTML += slicerHTML;
@@ -640,29 +659,44 @@
                             });
                             if (selectedValues.length > 0) {
                                 selectedSlicerValues[slicerHeading] = selectedValues;
-                                console.log(slicerHeading + ": " + selectedValues);
                             }
                         });
+
+                        // Function to check if a checkbox slicer option is selected
+                        function isSlicerOptionSelected($slicer, optionValue) {
+                            return $slicer.find(`input[type="checkbox"][value="${optionValue}"]:checked`).length > 0;
+                        }
+
                         // Hide or show table rows based on selected slicer values
                         $('.table tbody tr').each(function () {
                             let rowVisible = true;
                             const $row = $(this);
-                            // Check if all selected slicer values match in their respective columns
+
+                            // Handle the "Picks" slicer separately
+                            if (selectedSlicerValues["Picks"]) {
+                                const cellText = $row.find('td[data-col-name="Picks"] input[type="checkbox"]').prop('checked') ? "Checked" : "Unchecked";
+                                if (!selectedSlicerValues["Picks"].includes(cellText) && isSlicerOptionSelected($('.inner-slicer-container:contains("Picks")'), cellText)) {
+                                    rowVisible = false;
+                                }
+                            }
+
                             for (const slicerHeading in selectedSlicerValues) {
-                                const columnIndex = columnOrder.indexOf(slicerHeading);
-                                if (columnIndex !== -1) {
-                                    const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
-                                    const selectedValues = selectedSlicerValues[slicerHeading];
-                                    let matchesAllValues = true;
-                                    for (const value of selectedValues) {
-                                        if (!cellText.includes(value.toLowerCase())) {
-                                            matchesAllValues = false;
-                                            break;
+                                if (slicerHeading !== "Picks") {
+                                    const columnIndex = columnOrder.indexOf(slicerHeading);
+                                    if (columnIndex !== -1) {
+                                        const cellText = $row.find(`td:eq(${columnIndex})`).text().toLowerCase();
+                                        const selectedValues = selectedSlicerValues[slicerHeading];
+                                        let matchesAllValues = true;
+                                        for (const value of selectedValues) {
+                                            if (!cellText.includes(value.toLowerCase())) {
+                                                matchesAllValues = false;
+                                                break;
+                                            }
                                         }
-                                    }
-                                    if (!matchesAllValues) {
-                                        rowVisible = false;
-                                        break; // No need to check further
+                                        if (!matchesAllValues) {
+                                            rowVisible = false;
+                                            break; // No need to check further
+                                        }
                                     }
                                 }
                             }
@@ -951,10 +985,15 @@
         $('.populate-RS-button').on('click', function() {
             // Calculate the number of rows in the table
             const numRows = $('#MS_table tbody tr').length;
+
             // Count the number of "true" values in the "Picks" column
-            const numPicks = $('#MS_table tbody td[data-col-name="Picks"]').filter(function() {
-                return $(this).text().trim() === 'true';
-            }).length;
+            // const numPicks = $('#MS_table tbody td[data-col-name="Picks"]').filter(function() {
+            //     return $(this).text().trim() === 'true';
+            // }).length;
+            
+            // Count number of checked checkboxes
+            const numPicks = $('#MS_table tbody td[data-col-name="Picks"] input[type="checkbox"]:checked').length;
+
             // Create the modal content with the updated message
             const modalContent = `
                 You are currently going to populate Rolling Shortlist with ${numPicks} rows.
@@ -967,6 +1006,7 @@
         // Add an event listener to the "Populate" button in the confirmation modal
         $('#populateRSModalConfirm').on('click', function() {
             // Add logic for populating Rolling Shortlist here
+            console.log("Populating Rolling Shortlist with picked deals...")
 
             // Close the confirmation modal
             $('#populateRSModal').modal('hide');
