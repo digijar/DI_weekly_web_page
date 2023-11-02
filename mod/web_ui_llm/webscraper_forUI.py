@@ -14,8 +14,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
+import webdriver_manager
 from bs4 import BeautifulSoup
 import time
 from datetime import datetime
@@ -680,6 +682,9 @@ def get_capitaliq (company, final_dict, service_instance):
 
 def get_company(company):
     service_instance = ChromeService(ChromeDriverManager().install())
+    # service_instance = ChromeService(ChromeDriverManager("119.0.6045.106").install())
+    # service_instance = webdriver.Chrome(service=Service(ChromeDriverManager("119.0.6045.106").install()),options=chrome_options)
+
     company = company.strip()
     
     # initialise final_dict json
@@ -708,20 +713,20 @@ def get_company(company):
             service_instance.stop()
             return ({company: final_dict})
         
-@app.get("/")
-async def get_rolling_shortlist_data():
-    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
-    result = client.query(sql_query)
+# @app.get("/")
+# async def get_rolling_shortlist_data():
+#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
+#     result = client.query(sql_query)
 
-    target_list = []
-    for row in result:
-        # print(row[' Target'])
-        # print(row['Business Description'])
-        target_list.append(row[' Target'])
-        # return "succeeded"
+#     target_list = []
+#     for row in result:
+#         # print(row[' Target'])
+#         # print(row['Business Description'])
+#         target_list.append(row[' Target'])
+#         # return "succeeded"
 
-    return JSONResponse(content = target_list)
-    # return row
+#     return JSONResponse(content = target_list)
+#     # return row
 
 microservice_url = "http://127.0.0.1:5011"
 
@@ -741,6 +746,7 @@ async def scrape_webscraping(request: Request):
             print (row_num)
             print(target)
             print('Scraping...')
+            print(webdriver_manager.__version__)
             # Scrape data
             scraped_data = get_company(target)
 
