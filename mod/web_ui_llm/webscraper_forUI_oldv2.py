@@ -12,7 +12,9 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
 from bs4 import BeautifulSoup
 import time
@@ -22,7 +24,7 @@ from urllib.parse import urlparse, parse_qs
 username = 'smustu\elijah.khor.2021'
 password = 'AyabeKyoto1!'
 
-chrome_options = webdriver.ChromeOptions()
+chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--disable-gpu")
@@ -677,7 +679,7 @@ def get_capitaliq (company, final_dict, service_instance):
     return final_dict
 
 def get_company(company):
-    service_instance = Service()
+    service_instance = ChromeService(ChromeDriverManager().install())
     company = company.strip()
     
     # initialise final_dict json
@@ -706,20 +708,20 @@ def get_company(company):
             service_instance.stop()
             return ({company: final_dict})
         
-# @app.get("/")
-# async def get_rolling_shortlist_data():
-#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
-#     result = client.query(sql_query)
+@app.get("/")
+async def get_rolling_shortlist_data():
+    sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
+    result = client.query(sql_query)
 
-#     target_list = []
-#     for row in result:
-#         # print(row[' Target'])
-#         # print(row['Business Description'])
-#         target_list.append(row[' Target'])
-#         # return "succeeded"
+    target_list = []
+    for row in result:
+        # print(row[' Target'])
+        # print(row['Business Description'])
+        target_list.append(row[' Target'])
+        # return "succeeded"
 
-#     return JSONResponse(content = target_list)
-#     # return row
+    return JSONResponse(content = target_list)
+    # return row
 
 microservice_url = "http://127.0.0.1:5011"
 

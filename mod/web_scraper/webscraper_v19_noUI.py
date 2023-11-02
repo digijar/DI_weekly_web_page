@@ -706,67 +706,45 @@ def get_company(company):
             service_instance.stop()
             return ({company: final_dict})
         
-# @app.get("/")
-# async def get_rolling_shortlist_data():
-#     sql_query = "SELECT * FROM `testing-bigquery-vertexai.templates.Rolling_Shortlist`"
-#     result = client.query(sql_query)
-
-#     target_list = []
-#     for row in result:
-#         # print(row[' Target'])
-#         # print(row['Business Description'])
-#         target_list.append(row[' Target'])
-#         # return "succeeded"
-
-#     return JSONResponse(content = target_list)
-#     # return row
 
 microservice_url = "http://127.0.0.1:5011"
 
-@app.post("/scrape")
-async def scrape_webscraping(request: Request):
-    try:
-        data = await request.json()
-    except JSONDecodeError:
-        return 'Invalid JSON data.'
+@app.get('/scrape/{row_num}')
+async def webscraping(row_num:float):
+    # Make an HTTP GET request to the endpoint with row_num in the path
+    response = requests.get(f"{microservice_url}/bq/{row_num}")
 
+    # Parse the JSON response
+    response_data = response.json()
+
+    # Extract the data you need, for example, the company_name
+    company_name = response_data.get("company_name")
+    print(company_name)
+    print('Scraping...')
+    # Scrape data
+    scraped_data = get_company(company_name)
+
+    # Package in JSON
+    update_data = {
+        "num": row_num,
+        "target": company_name,
+        "scraped_data": scraped_data
+    }
+    ## send back to retrieve to update
+    update_response = requests.post(f"{microservice_url}/update", json=update_data)
     success = True
-
-    try:
-        for target_data in data:
-            row_num = target_data.get('num')
-            target = target_data.get('target')
-            print (row_num)
-            print(target)
-            print('Scraping...')
-            # Scrape data
-            scraped_data = get_company(target)
-
-            # Package in JSON
-            update_data = {
-                "num": row_num,
-                "target": target,
-                "scraped_data": scraped_data
-            }
-            ## send back to retrieve to update
-            update_response = requests.post(f"{microservice_url}/update", json=update_data)
-            success = True
-            if update_response.status_code == 200:
-                # Check if the update was successful
-                update_result = update_response.json()
-                if update_result.get("success"):
-                    print("Data update successful.")
-                else:
-                    print("Data update failed.")
-                    success = False
-                return {"Data update successful?": success, "success": success}
-            else:
-                print(f"Update request failed with status code: {update_response.status_code}")
-    except Exception as e:
-        print(e)
-        success = False
-    return {"success": success}
+    if update_response.status_code == 200:
+        # Check if the update was successful
+        update_result = update_response.json()
+        if update_result.get("success"):
+            print("Data update successful.")
+        else:
+            print("Data update failed.")
+            success = False
+        return {"Data update successful?": success}
+    else:
+        print(f"Update request failed with status code: {update_response.status_code}")
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("webscraper_forUI:app", host='127.0.0.1', port=5009, reload=True)
+    uvicorn.run("webscraper_v18_noUI:app", host='127.0.0.1', port=5009, reload=True)
